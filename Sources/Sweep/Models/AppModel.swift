@@ -12,6 +12,9 @@ final class AppModel: ObservableObject {
     let privacy: PrivacyModel
     let optimization: OptimizationModel
     let uninstaller = UninstallerModel()
+    let malware = MalwareModel()
+    let maintenance = MaintenanceModel()
+    let updater = UpdaterModel()
     let smartScan: SmartScanModel
 
     init() {

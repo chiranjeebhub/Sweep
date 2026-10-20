@@ -62,12 +62,9 @@ struct RootView: View {
         case .privacy: PrivacyView(model: app.privacy)
         case .optimization: OptimizationView(model: app.optimization)
         case .uninstaller: UninstallerView(model: app.uninstaller)
-        case .malware:
-            ComingSoonView(module: .malware, detail: "Malware scanning needs an up-to-date signature database. It's planned for a later version.")
-        case .maintenance:
-            ComingSoonView(module: .maintenance, detail: "Maintenance scripts such as reindexing Spotlight and repairing disk permissions are planned for a later version.")
-        case .updater:
-            ComingSoonView(module: .updater, detail: "Checking your apps for updates is planned for a later version.")
+        case .malware: MalwareView(model: app.malware)
+        case .maintenance: MaintenanceView(model: app.maintenance)
+        case .updater: UpdaterView(model: app.updater)
         }
     }
 }
@@ -86,19 +83,6 @@ private struct WindowChrome: NSViewRepresentable {
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
             window.isMovableByWindowBackground = true
-        }
-    }
-}
-
-struct ComingSoonView: View {
-    let module: Module
-    let detail: String
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ScreenHeader(title: module.title, subtitle: "Coming soon")
-            Rectangle().fill(Theme.divider).frame(height: 1)
-            StatusMessage(symbol: module.symbol, title: "\(module.title) isn't available yet", detail: detail)
         }
     }
 }

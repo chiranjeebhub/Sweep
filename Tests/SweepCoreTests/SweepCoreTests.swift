@@ -95,4 +95,83 @@ final class SweepCoreTests: XCTestCase {
         XCTAssertGreaterThan(snapshot.diskTotal, 0)
         XCTAssertTrue((0...1).contains(snapshot.cpuLoad))
     }
+
+    func testVersionCompareTreatsPartsAsNumbers() {
+        XCTAssertTrue(VersionCompare.isNewer("1.10", than: "1.9"))
+        XCTAssertTrue(VersionCompare.isNewer("2.0.1", than: "2.0"))
+        XCTAssertFalse(VersionCompare.isNewer("1.0.0", than: "1.0"))
+        XCTAssertFalse(VersionCompare.isNewer("3.2", than: "3.10"))
+    }
+
+    func testAppcastParserSkipsDeltasAndReadsVersions() throws {
+        let feed = """
+        <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0"><channel>
+          <item>
+            <sparkle:version>120</sparkle:version>
+            <sparkle:shortVersionString>1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://example.com/App-1.2.zip" length="10" type="application/octet-stream"/>
+            <sparkle:deltas>
+              <enclosure url="https://example.com/delta.delta" sparkle:version="999" sparkle:deltaFrom="110"/>
+            </sparkle:deltas>
+          </item>
+          <item>
+            <enclosure url="https://example.com/App-1.3b.zip" sparkle:version="130" sparkle:shortVersionString="1.3b"/>
+            <sparkle:channel>beta</sparkle:channel>
+          </item>
+        </channel></rss>
+        """
+        let items = AppcastParser.parse(Data(feed.utf8))
+        XCTAssertEqual(items.count, 2)
+        XCTAssertEqual(items[0].version, "120")
+        XCTAssertEqual(items[0].shortVersion, "1.2")
+        XCTAssertEqual(items[0].minimumSystemVersion, "13.0")
+        XCTAssertEqual(items[0].downloadURL?.lastPathComponent, "App-1.2.zip")
+        XCTAssertNil(items[0].channel)
+        XCTAssertEqual(items[1].channel, "beta")
+        XCTAssertEqual(items[1].version, "130")
+    }
+
+    func testUpdateInstallerOnlyHandlesArchives() {
+        XCTAssertTrue(UpdateInstaller.canInstall(URL(string: "https://example.com/App.zip")!))
+        XCTAssertTrue(UpdateInstaller.canInstall(URL(string: "https://example.com/App.dmg")!))
+        XCTAssertTrue(UpdateInstaller.canInstall(URL(string: "https://example.com/App.tar.xz")!))
+        XCTAssertFalse(UpdateInstaller.canInstall(URL(string: "https://example.com/App.pkg")!))
+    }
+
+    func testKnownAdwareMatchingIgnoresCaseAndPunctuation() {
+        XCTAssertEqual(MalwareScanner.knownFamily(in: "com.Search-Baron.agent"), "Search Baron")
+        XCTAssertEqual(MalwareScanner.knownFamily(in: "Advanced Mac Cleaner.app"), "Advanced Mac Cleaner")
+        XCTAssertNil(MalwareScanner.knownFamily(in: "com.google.keystone.agent"))
+    }
+
+    func testMalwareScannerFlagsAdwareAndHiddenPrograms() throws {
+        let agents = root.appendingPathComponent("Library/LaunchAgents")
+        try FileManager.default.createDirectory(at: agents, withIntermediateDirectories: true)
+        let hidden = try makeFile(".hidden/runner", bytes: 10)
+        let legit = try makeFile("bin/tool", bytes: 10)
+        func agent(_ label: String, program: String) throws {
+            let plist: NSDictionary = ["Label": label, "ProgramArguments": [program]]
+            try plist.write(to: agents.appendingPathComponent("\(label).plist"))
+        }
+        try agent("com.pcvark.helper", program: "/nonexistent/helper")
+        try agent("com.example.sneaky", program: hidden.path)
+        try agent("com.example.fine", program: legit.path)
+        try agent("com.example.gone", program: "/nonexistent/gone")
+
+        let scanner = MalwareScanner(home: root, systemLibrary: root.appendingPathComponent("System"),
+                                     applicationFolders: [])
+        let threats = Dictionary(uniqueKeysWithValues: scanner.scan().map { ($0.name, $0.severity) })
+        XCTAssertEqual(threats["com.pcvark.helper"], .high)
+        XCTAssertEqual(threats["com.example.sneaky"], .medium)
+        XCTAssertEqual(threats["com.example.gone"], .low)
+        XCTAssertNil(threats["com.example.fine"])
+    }
+
+    func testMaintenanceRunnerReadsEachTaskStatus() {
+        let tasks = MaintenanceTask.all.filter { ["scripts", "spotlight"].contains($0.id) }
+        let results = MaintenanceRunner.parse("sweep-result:scripts:0\rsweep-result:spotlight:1\r", tasks: tasks)
+        XCTAssertEqual(results["scripts"], .done)
+        XCTAssertEqual(results["spotlight"], .failed)
+    }
 }

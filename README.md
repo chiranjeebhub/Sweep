@@ -11,16 +11,17 @@ A native macOS cleaner in the spirit of CleanMyMac X, built with SwiftUI.
 | **Large & Old Files** | Lists files over 100 MB in Desktop, Documents, Downloads, Movies, Music and Pictures, with filters by size, age and kind. |
 | **Trash Bins** | Shows how much space the Trash uses and empties it through Finder. |
 | **Privacy** | Clears history, caches, sessions, cookies and form data for Chrome, Edge, Brave, Firefox and Safari, plus recent-items lists. Saved passwords and bookmarks are never touched. |
+| **Malware Removal** | Checks launch agents, launch daemons, apps and support folders for known Mac adware families, startup items that run from hidden or temporary folders, and unsigned programs that start on their own. Stops and removes what you tick. It complements XProtect, which macOS keeps updated in the background. |
 | **Optimization** | Live memory, CPU and disk figures, frees inactive memory, flushes the DNS cache, lists the apps using the most memory, and links to Login Items. |
+| **Maintenance** | Runs maintenance scripts, rebuilds Launch Services, clears the Quick Look and font caches, reindexes Spotlight, thins Time Machine local snapshots and verifies the startup disk. |
 | **Uninstaller** | Lists your apps with their real size and last-opened date, removes an app with its support files, caches, preferences, containers and launch agents, and finds leftovers from apps you've already deleted. |
-
-Malware Removal, Maintenance and Updater appear in the sidebar as "coming soon".
+| **Updater** | Checks App Store apps against the App Store and other apps against their Sparkle update feed. Sparkle updates are downloaded and installed in place after checking they're signed by the same developer. App Store updates open in the App Store. |
 
 ### Safety
 
 - Everything Sweep removes is **moved to the Trash**, never deleted outright, so you can put it back from Finder. Only "Empty Trash" is permanent, and it asks first.
 - Browsers are skipped while they're open, because they rewrite their files when they quit.
-- Freeing memory and flushing DNS use the standard macOS administrator prompt.
+- Freeing memory, flushing DNS, some Maintenance tasks and removing malware outside your home folder use the standard macOS administrator prompt.
 - Safari, Messages and the Trash are protected by macOS. Give Sweep **Full Disk Access** in System Settings › Privacy & Security to clean them.
 
 ## Requirements
