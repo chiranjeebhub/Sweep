@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24314F"/>
+      <stop offset="1" stop-color="#14171F"/>
+    </linearGradient>
+    <linearGradient id="bristles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FA5FF"/>
+      <stop offset="1" stop-color="#3D6BE0"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="184" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3"/>
+  <g transform="rotate(32 512 512) translate(30 -20)">
+    <rect x="494" y="170" width="36" height="330" rx="18" fill="#E3E6EF"/>
+    <rect x="448" y="478" width="128" height="58" rx="16" fill="#2E4FA8"/>
+    <path d="M452 530 L572 530 L650 800 Q512 836 374 800 Z" fill="url(#bristles)"/>
+    <path d="M470 560 L430 790 M512 560 L512 806 M554 560 L594 790" stroke="#2E4FA8" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+  </g>
+  <path fill="#FFFFFF" d="M300 630Q300 700 370 700Q300 700 300 770Q300 700 230 700Q300 700 300 630Z"/>
+  <path fill="#FFFFFF" d="M240 530Q240 560 270 560Q240 560 240 590Q240 560 210 560Q240 560 240 530Z"/>
+  <circle cx="380" cy="800" r="16" fill="#FFFFFF" opacity=".8"/>
+</svg>

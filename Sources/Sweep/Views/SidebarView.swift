@@ -11,10 +11,11 @@ struct SidebarView: View {
             Spacer().frame(height: 40)
 
             HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Theme.accent)
-                    .frame(width: 32, height: 32)
-                    .overlay(Image(systemName: "sparkles").font(.system(size: 16, weight: .semibold)).foregroundStyle(.white))
+                // The app icon from Resources/AppIcon.icns; its artwork has a transparent margin, hence the larger frame.
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 38, height: 38)
+                    .padding(-3)
                     .accessibilityHidden(true)
                 Text("Sweep").font(.system(size: 16, weight: .bold))
             }
