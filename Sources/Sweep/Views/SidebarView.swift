@@ -8,7 +8,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Room for the window's traffic-light buttons, which sit over the sidebar.
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 34)
 
             HStack(spacing: 10) {
                 // The app icon from Resources/AppIcon.icns; its artwork has a transparent margin, hence the larger frame.
@@ -20,7 +20,6 @@ struct SidebarView: View {
                 Text("Sweep").font(.system(size: 16, weight: .bold))
             }
             .padding(.horizontal, 20)
-            .padding(.top, 8)
             .padding(.bottom, 12)
 
             VStack(alignment: .leading, spacing: 14) {
