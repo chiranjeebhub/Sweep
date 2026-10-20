@@ -49,4 +49,6 @@ Sources/SweepCore/   Scanning and cleaning logic, no UI (unit tested)
 Sources/Sweep/       SwiftUI app: models per screen, views, theme
 Tests/               Tests for SweepCore against temporary folders
 Resources/Info.plist App bundle metadata used by scripts/build-app.sh
+Resources/AppIcon.svg Source artwork for the app icon (broom on graphite)
+Resources/AppIcon.icns App icon built from AppIcon.svg, copied in by scripts/build-app.sh
 ```
