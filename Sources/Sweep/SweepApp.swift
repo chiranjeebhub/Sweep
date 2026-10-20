@@ -45,6 +45,7 @@ struct RootView: View {
         .background(Theme.window)
         .foregroundStyle(Theme.text)
         .ignoresSafeArea()
+        .background(WindowChrome())
         .onAppear { app.optimization.start() }
     }
 
@@ -63,6 +64,24 @@ struct RootView: View {
             ComingSoonView(module: .maintenance, detail: "Maintenance scripts such as reindexing Spotlight and repairing disk permissions are planned for a later version.")
         case .updater:
             ComingSoonView(module: .updater, detail: "Checking your apps for updates is planned for a later version.")
+        }
+    }
+}
+
+/// Lets the content run up under the title bar, so the sidebar fills the window's full height
+/// with the traffic-light buttons sitting on top of it.
+private struct WindowChrome: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { ChromeView() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    private final class ChromeView: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let window else { return }
+            window.styleMask.insert(.fullSizeContentView)
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.isMovableByWindowBackground = true
         }
     }
 }
