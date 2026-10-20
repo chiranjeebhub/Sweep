@@ -37,8 +37,12 @@ struct RootView: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // The sidebar always runs under the title bar on its own, so its top doesn't
+            // shift with whether the selected screen happens to fill the safe area.
             SidebarView(optimization: app.optimization)
                 .frame(width: 240)
+                .frame(maxHeight: .infinity)
+                .ignoresSafeArea()
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

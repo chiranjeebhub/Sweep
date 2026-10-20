@@ -7,8 +7,8 @@ struct SidebarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Room for the window's traffic-light buttons, which sit over the sidebar.
-            Spacer().frame(height: 16)
+            // Room for the window's traffic-light buttons, measured from the window's top edge.
+            Spacer().frame(height: 36)
 
             HStack(spacing: 10) {
                 // The app icon from Resources/AppIcon.icns; its artwork has a transparent margin, hence the larger frame.
@@ -49,8 +49,14 @@ struct SidebarView: View {
                 .padding(12)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Theme.panel)
-        .overlay(alignment: .trailing) { Rectangle().fill(Theme.border).frame(width: 1) }
+        // Panel and divider both run up under the title bar to the window's top edge.
+        .background {
+            HStack(spacing: 0) {
+                Theme.panel
+                Theme.border.frame(width: 1)
+            }
+            .ignoresSafeArea()
+        }
     }
 
     private func row(_ module: Module) -> some View {
