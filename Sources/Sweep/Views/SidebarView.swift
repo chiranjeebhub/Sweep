@@ -49,8 +49,14 @@ struct SidebarView: View {
                 .padding(12)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Theme.panel)
-        .overlay(alignment: .trailing) { Rectangle().fill(Theme.border).frame(width: 1) }
+        // Panel and divider both run up under the title bar to the window's top edge.
+        .background {
+            HStack(spacing: 0) {
+                Theme.panel
+                Theme.border.frame(width: 1)
+            }
+            .ignoresSafeArea()
+        }
     }
 
     private func row(_ module: Module) -> some View {
