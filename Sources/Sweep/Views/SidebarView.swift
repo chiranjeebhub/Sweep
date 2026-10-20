@@ -8,7 +8,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Room for the window's traffic-light buttons, measured from the window's top edge.
-            Spacer().frame(height: 36)
+            Spacer().frame(height: 42)
 
             HStack(spacing: 10) {
                 // The app icon from Resources/AppIcon.icns; its artwork has a transparent margin, hence the larger frame.
@@ -19,8 +19,10 @@ struct SidebarView: View {
                     .accessibilityHidden(true)
                 Text("Sweep").font(.system(size: 16, weight: .bold))
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
+            // Lines the icon up with the left edge of the selected row below it, and keeps the
+            // same gap above the logo (to the window buttons) as below it (to Smart Scan).
+            .padding(.horizontal, 14)
+            .padding(.bottom, 18)
 
             VStack(alignment: .leading, spacing: 14) {
                 ForEach(Module.sections.indices, id: \.self) { index in
