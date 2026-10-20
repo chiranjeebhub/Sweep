@@ -43,6 +43,12 @@ You can also open `Package.swift` in Xcode and run the **Sweep** scheme.
 
 Run the tests with `swift test`.
 
+## Releasing
+
+`scripts/release.sh <version>` builds a universal app, signs it with a Developer ID, notarizes it,
+packs it into a DMG and publishes it on GitHub Releases. See [docs/RELEASING.md](docs/RELEASING.md)
+for the one-time certificate and notarization setup.
+
 ## Project layout
 
 ```
@@ -52,4 +58,6 @@ Tests/               Tests for SweepCore against temporary folders
 Resources/Info.plist App bundle metadata used by scripts/build-app.sh
 Resources/AppIcon.svg Source artwork for the app icon (broom on graphite)
 Resources/AppIcon.icns App icon built from AppIcon.svg, copied in by scripts/build-app.sh
+Resources/Sweep.entitlements Hardened-runtime entitlements used when signing a release
+scripts/release.sh   Signed, notarized DMG release to GitHub (docs/RELEASING.md)
 ```
