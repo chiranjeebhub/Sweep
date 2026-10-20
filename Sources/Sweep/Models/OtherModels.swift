@@ -67,7 +67,8 @@ final class PrivacyModel: ObservableObject {
             }
             urls += source.items.filter { isSelected($0) }.flatMap(\.urls)
         }
-        let result = await background { Trasher().trash(urls) }
+        let toTrash = urls
+        let result = await background { Trasher().trash(toTrash) }
         skippedBrowsers = skipped
         LastRun.mark(.protection)
         await scan()
@@ -102,19 +103,23 @@ final class OptimizationModel: ObservableObject {
     @Published var lastMessage: String?
 
     private let stats = SystemStats()
-    private var timer: Timer?
+    private var ticker: Task<Void, Never>?
 
+    /// Refreshes the live figures every two seconds until `stop()`.
     func start() {
         refresh()
-        guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refreshSnapshot() }
+        guard ticker == nil else { return }
+        ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                self?.refreshSnapshot()
+            }
         }
     }
 
     func stop() {
-        timer?.invalidate()
-        timer = nil
+        ticker?.cancel()
+        ticker = nil
     }
 
     func refresh() {
@@ -163,7 +168,10 @@ final class OptimizationModel: ObservableObject {
 
     func quit(_ app: HeavyApp) {
         app.app.terminate()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refresh() }
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            self?.refresh()
+        }
     }
 
     func openLoginItemsSettings() {
