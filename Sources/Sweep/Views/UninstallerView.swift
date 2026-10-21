@@ -130,6 +130,10 @@ struct UninstallerView: View {
 
                 if let message = model.message {
                     Text(message).font(.system(size: 13)).foregroundStyle(Theme.protection)
+                    if model.needsFullDiskAccess {
+                        Button("Open Full Disk Access settings") { model.openFullDiskAccessSettings() }
+                            .buttonStyle(OutlineButtonStyle())
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -196,6 +200,17 @@ struct UninstallerView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
+            }
+            if let message = model.message {
+                HStack {
+                    Text(message).font(.system(size: 13)).foregroundStyle(Theme.protection)
+                    Spacer()
+                    if model.needsFullDiskAccess {
+                        Button("Open Full Disk Access settings") { model.openFullDiskAccessSettings() }
+                            .buttonStyle(OutlineButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 20)
             }
             FooterBar {
                 Text(model.selectedLeftovers.isEmpty

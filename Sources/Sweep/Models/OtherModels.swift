@@ -201,6 +201,8 @@ final class UninstallerModel: ObservableObject {
     @Published var excludedGroups: Set<String> = []
     @Published var selectedLeftovers: Set<URL> = []
     @Published var message: String?
+    /// Set when macOS blocked removing another app's data, which needs Full Disk Access.
+    @Published private(set) var needsFullDiskAccess = false
 
     private let scanner = AppScanner()
 
@@ -266,6 +268,7 @@ final class UninstallerModel: ObservableObject {
         message = result.failures.contains(app.url)
             ? "\(app.name) couldn't be moved to the Trash. It may be protected by macOS."
             : "Moved \(app.name) to the Trash, freeing \(ByteFormat.string(result.freedBytes))."
+            + failureNote(result.failures.filter { $0 != app.url })
         focusedAppURL = nil
         await scan()
     }
@@ -279,7 +282,7 @@ final class UninstallerModel: ObservableObject {
         }
         let urls = selectedRemnantURLs
         let result = await background { Trasher().trashAskingForAdmin(urls) }
-        message = "Reset \(app.name), freeing \(ByteFormat.string(result.freedBytes))."
+        message = "Reset \(app.name), freeing \(ByteFormat.string(result.freedBytes))." + failureNote(result.failures)
         loadRemnants()
     }
 
@@ -287,8 +290,32 @@ final class UninstallerModel: ObservableObject {
         let urls = Array(selectedLeftovers)
         let result = await background { Trasher().trash(urls) }
         message = "Removed \(result.removedCount) leftover folders, freeing \(ByteFormat.string(result.freedBytes))."
+            + failureNote(result.failures)
         selectedLeftovers = []
         await scan()
+    }
+
+    /// Says which files stayed behind. macOS protects other apps' sandbox containers, so
+    /// removing them needs Full Disk Access; they then show up under Leftovers.
+    private func failureNote(_ failures: [URL]) -> String {
+        guard !failures.isEmpty else {
+            needsFullDiskAccess = false
+            return ""
+        }
+        let protected = failures.contains { url in
+            url.pathComponents.contains("Containers") || url.pathComponents.contains("Group Containers")
+        }
+        needsFullDiskAccess = protected
+        let count = failures.count == 1 ? "1 item" : "\(failures.count) items"
+        return protected
+            ? " \(count) couldn't be removed because macOS protects app data. Give Sweep Full Disk Access, then remove it from Leftovers."
+            : " \(count) couldn't be removed."
+    }
+
+    func openFullDiskAccessSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     var selectedLeftoverSize: Int64 {
