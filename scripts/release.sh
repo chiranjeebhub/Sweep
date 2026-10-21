@@ -100,15 +100,16 @@ fi
 
 # --- Build -------------------------------------------------------------------------------------
 step "Building universal Sweep.app $VERSION"
-SWEEP_ARCHS="arm64 x86_64" "$ROOT/scripts/build-app.sh" release
-
 BUILD_NUMBER="$(git rev-list --count HEAD)"
-/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
+SWEEP_ARCHS="arm64 x86_64" SWEEP_VERSION="$VERSION" SWEEP_BUILD="$BUILD_NUMBER" \
+    "$ROOT/scripts/build-app.sh" release
 echo "Version $VERSION (build $BUILD_NUMBER), architectures: $(lipo -archs "$APP/Contents/MacOS/Sweep")"
 
 # --- Sign --------------------------------------------------------------------------------------
 step "Signing with hardened runtime"
+# Drop build-app.sh's ad-hoc signature and any Finder metadata, so the Developer ID signature starts clean.
+codesign --remove-signature "$APP"
+xattr -cr "$APP"
 codesign --force --timestamp --options runtime \
     --entitlements "$ENTITLEMENTS" \
     --sign "$SWEEP_SIGN_IDENTITY" "$APP"
