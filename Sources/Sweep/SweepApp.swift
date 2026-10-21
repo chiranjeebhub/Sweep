@@ -18,6 +18,29 @@ struct SweepApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {}
         }
+
+        Settings {
+            SettingsView().preferredColorScheme(.dark)
+        }
+    }
+}
+
+/// Sweep > Settings… (⌘,).
+struct SettingsView: View {
+    @AppStorage(UninstallerModel.moveToTrashKey) private var moveToTrash = true
+
+    var body: some View {
+        Form {
+            Section("Uninstaller") {
+                Toggle("Move uninstalled apps to the Trash", isOn: $moveToTrash)
+                Text(moveToTrash
+                     ? "Apps and their files go to the Trash, so you can put them back until you empty it."
+                     : "Apps and their files are deleted right away. This can't be undone.")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .frame(width: 440)
     }
 }
 

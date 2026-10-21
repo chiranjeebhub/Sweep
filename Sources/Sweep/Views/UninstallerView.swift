@@ -30,7 +30,9 @@ struct UninstallerView: View {
             Button("Uninstall", role: .destructive) { Task { await model.uninstallFocused() } }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The app and the selected files move to the Trash.")
+            Text(model.movesToTrash
+                 ? "The app and the selected files move to the Trash."
+                 : "The app and the selected files are deleted permanently. You can change this in Sweep > Settings.")
         }
     }
 

@@ -206,6 +206,11 @@ final class UninstallerModel: ObservableObject {
 
     private let scanner = AppScanner()
 
+    /// Off in Settings means uninstalled apps and their files are deleted instead of moved to the Trash.
+    nonisolated static let moveToTrashKey = "uninstaller.moveToTrash"
+    var movesToTrash: Bool { UserDefaults.standard.object(forKey: Self.moveToTrashKey) as? Bool ?? true }
+    private var trasher: Trasher { Trasher(permanently: !movesToTrash) }
+
     func scan() async {
         isScanning = true
         let scanner = scanner
@@ -264,10 +269,12 @@ final class UninstallerModel: ObservableObject {
             return
         }
         let urls = [app.url] + selectedRemnantURLs
-        let result = await background { Trasher().trashAskingForAdmin(urls) }
+        let trasher = trasher
+        let result = await background { trasher.trashAskingForAdmin(urls) }
         message = result.failures.contains(app.url)
-            ? "\(app.name) couldn't be moved to the Trash. It may be protected by macOS."
-            : "Moved \(app.name) to the Trash, freeing \(ByteFormat.string(result.freedBytes))."
+            ? "\(app.name) couldn't be removed. It may be protected by macOS."
+            : (movesToTrash ? "Moved \(app.name) to the Trash" : "Deleted \(app.name)")
+                + ", freeing \(ByteFormat.string(result.freedBytes))."
             + failureNote(result.failures.filter { $0 != app.url })
         focusedAppURL = nil
         await scan()
@@ -281,14 +288,16 @@ final class UninstallerModel: ObservableObject {
             return
         }
         let urls = selectedRemnantURLs
-        let result = await background { Trasher().trashAskingForAdmin(urls) }
+        let trasher = trasher
+        let result = await background { trasher.trashAskingForAdmin(urls) }
         message = "Reset \(app.name), freeing \(ByteFormat.string(result.freedBytes))." + failureNote(result.failures)
         loadRemnants()
     }
 
     func removeSelectedLeftovers() async {
         let urls = Array(selectedLeftovers)
-        let result = await background { Trasher().trash(urls) }
+        let trasher = trasher
+        let result = await background { trasher.trash(urls) }
         message = "Removed \(result.removedCount) leftover folders, freeing \(ByteFormat.string(result.freedBytes))."
             + failureNote(result.failures)
         selectedLeftovers = []

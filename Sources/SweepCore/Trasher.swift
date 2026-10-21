@@ -16,9 +16,13 @@ public struct CleanResult: Sendable {
 }
 
 /// Moves files to the user's Trash instead of deleting them, so every clean can be undone
-/// from Finder.
+/// from Finder. With `permanently`, files are deleted outright instead.
 public struct Trasher: Sendable {
-    public init() {}
+    let permanently: Bool
+
+    public init(permanently: Bool = false) {
+        self.permanently = permanently
+    }
 
     public func trash(_ urls: [URL]) -> CleanResult {
         let fileManager = FileManager.default
@@ -26,7 +30,11 @@ public struct Trasher: Sendable {
         for url in urls where fileManager.fileExists(atPath: url.path) {
             let size = FileSize.allocatedSize(of: url, fileManager: fileManager)
             do {
-                try fileManager.trashItem(at: url, resultingItemURL: nil)
+                if permanently {
+                    try fileManager.removeItem(at: url)
+                } else {
+                    try fileManager.trashItem(at: url, resultingItemURL: nil)
+                }
                 result.freedBytes += size
                 result.removedCount += 1
             } catch {
@@ -37,8 +45,8 @@ public struct Trasher: Sendable {
     }
 
     /// Like `trash(_:)`, but files macOS won't let the user move (root-owned launch daemons,
-    /// privileged helpers, folders in `/Library`) are moved to the Trash with administrator
-    /// rights, after one password prompt. Launch jobs are unloaded first so they stop running.
+    /// privileged helpers, folders in `/Library`) are moved to the Trash (or deleted) with
+    /// administrator rights, after one password prompt. Launch jobs are unloaded first so they stop running.
     public func trashAskingForAdmin(_ urls: [URL]) -> CleanResult {
         var result = trash(urls)
         // Only files outside the home folder need admin rights; anything else failed for another reason.
@@ -51,7 +59,9 @@ public struct Trasher: Sendable {
         let stamp = Int(Date().timeIntervalSince1970)
         let commands = protected.map { url -> String in
             let destination = trashFolder.appendingPathComponent("\(url.lastPathComponent) \(stamp)")
-            var command = "/bin/mv -f \(Self.shellQuoted(url.path)) \(Self.shellQuoted(destination.path))"
+            var command = permanently
+                ? "/bin/rm -rf \(Self.shellQuoted(url.path))"
+                : "/bin/mv -f \(Self.shellQuoted(url.path)) \(Self.shellQuoted(destination.path))"
             if url.pathExtension == "plist", url.deletingLastPathComponent().lastPathComponent.hasPrefix("Launch") {
                 command = "/bin/launchctl unload \(Self.shellQuoted(url.path)) 2>/dev/null; " + command
             }
