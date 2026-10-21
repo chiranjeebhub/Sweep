@@ -12,6 +12,7 @@ scripts/release.sh 0.2.0 --notes notes.md      # use your own release notes
 scripts/release.sh 0.2.0 --draft               # publish as a draft you review on GitHub first
 scripts/release.sh 0.2.0 --no-publish          # stop after the notarized DMG in dist/
 scripts/release.sh 0.2.0 --no-notarize         # signing and DMG only, no Apple upload
+scripts/release.sh 0.2.0 --no-cask             # publish but leave the Homebrew cask alone
 ```
 
 What it does:
@@ -26,6 +27,9 @@ What it does:
 5. Builds `dist/Sweep-<version>.dmg` with the app and an Applications shortcut, signs it,
    notarizes and staples it, and checks it with Gatekeeper (`spctl`).
 6. Asks, then creates the GitHub release `v<version>` with the DMG and its SHA-256 checksum.
+7. Bumps `version` and `sha256` in `Casks/sweep.rb` in
+   [chiranjeebhub/homebrew-tap](https://github.com/chiranjeebhub/homebrew-tap) and pushes it, so
+   `brew upgrade --cask chiranjeebhub/tap/sweep` picks up the new release. Drafts and `--no-cask` skip this.
 
 Credentials never go in the repo. The script reads them from your keychain or the environment.
 
