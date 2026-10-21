@@ -35,4 +35,54 @@ public struct Trasher: Sendable {
         }
         return result
     }
+
+    /// Like `trash(_:)`, but files macOS won't let the user move (root-owned launch daemons,
+    /// privileged helpers, folders in `/Library`) are moved to the Trash with administrator
+    /// rights, after one password prompt. Launch jobs are unloaded first so they stop running.
+    public func trashAskingForAdmin(_ urls: [URL]) -> CleanResult {
+        var result = trash(urls)
+        // Only files outside the home folder need admin rights; anything else failed for another reason.
+        let home = FileManager.default.homeDirectoryForCurrentUser.path + "/"
+        let protected = result.failures.filter { !$0.path.hasPrefix(home) }
+        guard !protected.isEmpty else { return result }
+        let sizes = protected.map { FileSize.allocatedSize(of: $0) }
+
+        let trashFolder = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".Trash")
+        let stamp = Int(Date().timeIntervalSince1970)
+        let commands = protected.map { url -> String in
+            let destination = trashFolder.appendingPathComponent("\(url.lastPathComponent) \(stamp)")
+            var command = "/bin/mv -f \(Self.shellQuoted(url.path)) \(Self.shellQuoted(destination.path))"
+            if url.pathExtension == "plist", url.deletingLastPathComponent().lastPathComponent.hasPrefix("Launch") {
+                command = "/bin/launchctl unload \(Self.shellQuoted(url.path)) 2>/dev/null; " + command
+            }
+            return command
+        }
+        let script = "do shell script \"\(Self.appleScriptEscaped(commands.joined(separator: "; ")))\" with administrator privileges"
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        process.arguments = ["-e", script]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        guard (try? process.run()) != nil else { return result }
+        process.waitUntilExit()
+
+        result.failures.removeAll { protected.contains($0) }
+        for (url, size) in zip(protected, sizes) {
+            if FileManager.default.fileExists(atPath: url.path) {
+                result.failures.append(url)
+            } else {
+                result.freedBytes += size
+                result.removedCount += 1
+            }
+        }
+        return result
+    }
+
+    static func shellQuoted(_ string: String) -> String {
+        "'" + string.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    static func appleScriptEscaped(_ string: String) -> String {
+        string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
 }

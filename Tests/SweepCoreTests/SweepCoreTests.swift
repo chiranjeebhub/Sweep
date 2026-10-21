@@ -61,6 +61,25 @@ final class SweepCoreTests: XCTestCase {
         XCTAssertFalse(remnants.urls.contains { $0.path.contains("com.other.App") })
     }
 
+    func testRemnantsMatchNameWithoutSpacesCrashReportsAndSystemFiles() throws {
+        _ = try makeFile("Library/Caches/BucketBrowser/QuickLook/thumb.db", bytes: 4_000)
+        _ = try makeFile("Library/Logs/DiagnosticReports/BucketBrowser-2026-10-21-080101.ips", bytes: 1_000)
+        _ = try makeFile("Library/Logs/DiagnosticReports/Other-2026-10-21-080101.ips", bytes: 1_000)
+        _ = try makeFile("Library/Cookies/com.bucketbrowser.app.binarycookies", bytes: 100)
+        _ = try makeFile("Library/Preferences/com.bucketbrowser.screenshots.plist", bytes: 100)
+        _ = try makeFile("System/LaunchDaemons/com.bucketbrowser.app.helper.plist", bytes: 100)
+        _ = try makeFile("System/PrivilegedHelperTools/com.bucketbrowser.app.helper", bytes: 1_000)
+        let app = InstalledApp(url: root.appendingPathComponent("Bucket Browser.app"), name: "Bucket Browser",
+                               bundleIdentifier: "com.bucketbrowser.app", version: "1.0", size: 0, lastUsed: nil)
+        let scanner = AppScanner(applicationFolders: [], library: root.appendingPathComponent("Library"),
+                                 systemLibrary: root.appendingPathComponent("System"))
+        let remnants = scanner.remnants(of: app)
+        XCTAssertEqual(Set(remnants.groups.map(\.title)), ["Supporting files", "Caches", "Logs", "System files"])
+        XCTAssertEqual(remnants.groups.first { $0.title == "System files" }?.urls.count, 2)
+        XCTAssertFalse(remnants.urls.contains { $0.lastPathComponent.hasPrefix("Other-") })
+        XCTAssertFalse(remnants.urls.contains { $0.lastPathComponent.contains("screenshots") })
+    }
+
     func testLeftoversSkipInstalledAndAppleIdentifiers() throws {
         _ = try makeFile("Library/Application Support/com.gone.App/data", bytes: 4_000)
         _ = try makeFile("Library/Application Support/com.still.Here/data", bytes: 4_000)

@@ -262,7 +262,7 @@ final class UninstallerModel: ObservableObject {
             return
         }
         let urls = [app.url] + selectedRemnantURLs
-        let result = await background { Trasher().trash(urls) }
+        let result = await background { Trasher().trashAskingForAdmin(urls) }
         message = result.failures.contains(app.url)
             ? "\(app.name) couldn't be moved to the Trash. It may be protected by macOS."
             : "Moved \(app.name) to the Trash, freeing \(ByteFormat.string(result.freedBytes))."
@@ -278,7 +278,7 @@ final class UninstallerModel: ObservableObject {
             return
         }
         let urls = selectedRemnantURLs
-        let result = await background { Trasher().trash(urls) }
+        let result = await background { Trasher().trashAskingForAdmin(urls) }
         message = "Reset \(app.name), freeing \(ByteFormat.string(result.freedBytes))."
         loadRemnants()
     }
