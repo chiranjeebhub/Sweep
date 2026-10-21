@@ -5,7 +5,7 @@
 <h1 align="center">Sweep</h1>
 
 <p align="center">
-  A fast, native Mac cleaner in the spirit of CleanMyMac X. Free, open source, built with SwiftUI.
+  A fast, native Mac cleaner. Free, open source, built with SwiftUI.
 </p>
 
 <p align="center">
@@ -167,5 +167,3 @@ logic in `SweepCore` with tests, and make sure `swift test` passes.
 ## License
 
 Sweep is released under the [MIT License](LICENSE). © 2026 Chiranjeeb Jena.
-
-Sweep is an independent project and isn't affiliated with MacPaw or CleanMyMac.
