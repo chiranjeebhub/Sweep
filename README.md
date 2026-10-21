@@ -1,11 +1,5 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="128" height="128" alt="Sweep app icon">
-</p>
-
-<h1 align="center">Sweep</h1>
-
-<p align="center">
-  A fast, native Mac cleaner. Free, open source, built with SwiftUI.
+  <img src="docs/images/social-preview.png" alt="Sweep: a fast, native Mac cleaner. Free and open source.">
 </p>
 
 <p align="center">
@@ -13,10 +7,6 @@
   <img src="https://img.shields.io/badge/macOS-13%2B-1B1C23" alt="macOS 13 or later">
   <img src="https://img.shields.io/badge/Swift-5.9-FFB066" alt="Swift 5.9">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-5FE0A8" alt="MIT license"></a>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/smart-scan-results.png" width="820" alt="Smart Scan results: Cleanup, Protection and Speed">
 </p>
 
 Sweep finds the caches, logs, browser traces, leftovers and stale apps that pile up on a Mac, shows you
