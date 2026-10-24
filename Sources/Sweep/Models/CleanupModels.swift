@@ -157,3 +157,82 @@ final class TrashModel: ObservableObject {
         await refresh()
     }
 }
+
+/// State for Node Modules.
+@MainActor
+final class NodeModulesModel: ObservableObject {
+    enum Age: Int, CaseIterable, Identifiable {
+        case any = 0, month = 30, quarter = 90, halfYear = 180, year = 365
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .any: "All projects"
+            case .month: "Older than 30 days"
+            case .quarter: "90 days"
+            case .halfYear: "180 days"
+            case .year: "1 year"
+            }
+        }
+    }
+
+    @Published private(set) var folders: [NodeModulesFolder] = []
+    @Published private(set) var isScanning = false
+    @Published private(set) var isRemoving = false
+    @Published private(set) var hasScanned = false
+    @Published var selected: Set<URL> = []
+    @Published var age: Age = .any
+    @Published var sort: NodeModulesSort = .size
+    @Published var search = ""
+    @Published var message: String?
+
+    /// Shares the Settings switch with the Uninstaller: off means folders are deleted instead of moved to the Trash.
+    var movesToTrash: Bool { UserDefaults.standard.object(forKey: UninstallerModel.moveToTrashKey) as? Bool ?? true }
+
+    func scan() async {
+        isScanning = true
+        folders = await background { NodeModulesScanner().scan() }
+        selected = selected.filter { url in folders.contains { $0.url == url } }
+        hasScanned = true
+        isScanning = false
+    }
+
+    var visibleFolders: [NodeModulesFolder] {
+        folders.untouched(forAtLeast: age.rawValue)
+            .filter { search.isEmpty || $0.projectPath.localizedCaseInsensitiveContains(search) }
+            .ordered(by: sort)
+    }
+
+    func count(olderThan age: Age) -> Int { folders.untouched(forAtLeast: age.rawValue).count }
+
+    var totalSize: Int64 { folders.reduce(0) { $0 + $1.size } }
+    var selectedFolders: [NodeModulesFolder] { folders.filter { selected.contains($0.url) } }
+    var selectedSize: Int64 { selectedFolders.reduce(0) { $0 + $1.size } }
+
+    var allVisibleSelected: Bool {
+        let visible = visibleFolders
+        return !visible.isEmpty && visible.allSatisfy { selected.contains($0.url) }
+    }
+
+    func setAllVisibleSelected(_ on: Bool) {
+        for folder in visibleFolders {
+            if on { selected.insert(folder.url) } else { selected.remove(folder.url) }
+        }
+    }
+
+    func revealSelected() {
+        NSWorkspace.shared.activateFileViewerSelecting(selectedFolders.map(\.url))
+    }
+
+    func removeSelected() async {
+        isRemoving = true
+        let urls = selectedFolders.map(\.url)
+        let trasher = Trasher(permanently: !movesToTrash)
+        let result = await background { trasher.trash(urls) }
+        let removed = Set(urls).subtracting(result.failures)
+        folders.removeAll { removed.contains($0.url) }
+        selected.subtract(removed)
+        message = "Freed \(ByteFormat.string(result.freedBytes))."
+            + (result.failures.isEmpty ? "" : " \(result.failures.count) folders couldn't be removed.")
+        isRemoving = false
+    }
+}

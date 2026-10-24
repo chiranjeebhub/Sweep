@@ -8,6 +8,7 @@ final class AppModel: ObservableObject {
 
     let junk: JunkModel
     let largeFiles = LargeFilesModel()
+    let nodeModules = NodeModulesModel()
     let trash = TrashModel()
     let privacy: PrivacyModel
     let optimization: OptimizationModel

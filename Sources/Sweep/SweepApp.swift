@@ -31,11 +31,11 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Uninstaller") {
-                Toggle("Move uninstalled apps to the Trash", isOn: $moveToTrash)
+            Section("Uninstaller and Node Modules") {
+                Toggle("Move removed items to the Trash", isOn: $moveToTrash)
                 Text(moveToTrash
-                     ? "Apps and their files go to the Trash, so you can put them back until you empty it."
-                     : "Apps and their files are deleted right away. This can't be undone.")
+                     ? "Uninstalled apps, their files and node_modules folders go to the Trash, so you can put them back until you empty it."
+                     : "Uninstalled apps, their files and node_modules folders are deleted right away. This can't be undone.")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
             }
         }
@@ -81,6 +81,7 @@ struct RootView: View {
         case .smartScan: SmartScanView(model: app.smartScan)
         case .systemJunk: SystemJunkView(model: app.junk)
         case .largeFiles: LargeFilesView(model: app.largeFiles)
+        case .nodeModules: NodeModulesView(model: app.nodeModules)
         case .trashBins: TrashBinsView(model: app.trash)
         case .privacy: PrivacyView(model: app.privacy)
         case .optimization: OptimizationView(model: app.optimization)

@@ -22,6 +22,7 @@ Sweep has ten tools, grouped the same way they appear in the sidebar.
 | ✨ | **Smart Scan** | Runs Cleanup, Protection and Speed together, shows one summary, and handles everything you leave ticked in one go. |
 | **Cleanup** | **System Junk** | Finds user caches, user and system logs, and Xcode leftovers (DerivedData, device support, simulator caches). |
 | | **Large & Old Files** | Lists files over 100 MB in Desktop, Documents, Downloads, Movies, Music and Pictures, filtered by size, age and kind. |
+| | **Node Modules** | Finds every `node_modules` folder in your home folder with its size and how long since you last touched the project, so you can clear the ones you no longer need. |
 | | **Trash Bins** | Shows how much space the Trash uses and empties it through Finder. |
 | **Protection** | **Privacy** | Clears history, caches, sessions, cookies and form data for Chrome, Edge, Brave, Firefox and Safari, plus recent-items lists. Saved passwords and bookmarks are never touched. |
 | | **Malware Removal** | Checks launch agents, launch daemons, apps and support folders for known Mac adware, startup items running from hidden or temporary folders, and unsigned programs that start on their own. Works alongside macOS XProtect. |

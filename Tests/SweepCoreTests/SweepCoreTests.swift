@@ -187,6 +187,67 @@ final class SweepCoreTests: XCTestCase {
         XCTAssertNil(threats["com.example.fine"])
     }
 
+    private func setModified(_ path: String, daysAgo: Double) throws {
+        let date = Date().addingTimeInterval(-daysAgo * 86_400)
+        try FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: root.appendingPathComponent(path).path)
+    }
+
+    func testNodeModulesScannerSkipsNestedHiddenAndLibrary() throws {
+        _ = try makeFile("code/app/package.json", bytes: 100)
+        _ = try makeFile("code/app/node_modules/react/index.js", bytes: 4_000)
+        _ = try makeFile("code/app/node_modules/react/node_modules/loose/index.js", bytes: 4_000)
+        _ = try makeFile("code/mono/packages/web/node_modules/vite/index.js", bytes: 4_000)
+        _ = try makeFile(".nvm/versions/node/lib/node_modules/npm/index.js", bytes: 4_000)
+        _ = try makeFile("Library/Application Support/Code/node_modules/x/index.js", bytes: 4_000)
+        let scanner = NodeModulesScanner(roots: [root], skipping: [root.appendingPathComponent("Library")])
+        let projects = scanner.findFolders().map { $0.deletingLastPathComponent().lastPathComponent }
+        XCTAssertEqual(projects.sorted(), ["app", "web"])
+
+        let folders = scanner.scan()
+        XCTAssertEqual(folders.count, 2)
+        XCTAssertGreaterThanOrEqual(folders.first { $0.projectName == "app" }?.size ?? 0, 8_000)
+    }
+
+    func testLastTouchedIgnoresInstallsBuildOutputAndGit() throws {
+        _ = try makeFile("proj/src/index.ts", bytes: 100)
+        _ = try makeFile("proj/package.json", bytes: 100)
+        _ = try makeFile("proj/node_modules/dep/index.js", bytes: 100)
+        _ = try makeFile("proj/dist/bundle.js", bytes: 100)
+        _ = try makeFile("proj/.git/index", bytes: 100)
+        try setModified("proj/src/index.ts", daysAgo: 40)
+        try setModified("proj/package.json", daysAgo: 100)
+        // Fresh installs, builds and git activity don't make the project look recently worked on.
+        let touched = try XCTUnwrap(NodeModulesScanner.lastTouched(project: root.appendingPathComponent("proj")))
+        let days = Date().timeIntervalSince(touched) / 86_400
+        XCTAssertEqual(days, 40, accuracy: 0.1)
+    }
+
+    func testLastTouchedFallsBackToGitActivity() throws {
+        _ = try makeFile("proj/node_modules/dep/index.js", bytes: 100)
+        let log = "0000 abcd Dev <dev@example.com> 1700000000 +0000\tclone: from x\n"
+            + "abcd ef01 Dev <dev@example.com> 1710000000 +0100\tcommit: tweak\n"
+        let url = try makeFile("proj/.git/logs/HEAD", bytes: 0)
+        try Data(log.utf8).write(to: url)
+        let touched = NodeModulesScanner.lastTouched(project: root.appendingPathComponent("proj"))
+        XCTAssertEqual(touched, Date(timeIntervalSince1970: 1_710_000_000))
+    }
+
+    func testNodeModulesAgeFilterAndSorting() {
+        let now = Date()
+        func folder(_ name: String, size: Int64, days: Double?) -> NodeModulesFolder {
+            NodeModulesFolder(url: root.appendingPathComponent("\(name)/node_modules"), size: size,
+                              lastTouched: days.map { now.addingTimeInterval(-$0 * 86_400) })
+        }
+        let folders = [folder("b", size: 10, days: 10), folder("a", size: 30, days: 200),
+                       folder("c", size: 20, days: 95), folder("d", size: 5, days: nil)]
+        XCTAssertEqual(folders.untouched(forAtLeast: 90, now: now).map(\.projectName), ["a", "c", "d"])
+        XCTAssertEqual(folders.untouched(forAtLeast: 180, now: now).map(\.projectName), ["a", "d"])
+        XCTAssertEqual(folders.ordered(by: .size).map(\.projectName), ["a", "c", "b", "d"])
+        XCTAssertEqual(folders.ordered(by: .age).map(\.projectName), ["d", "a", "c", "b"])
+        XCTAssertEqual(folders.ordered(by: .name).map(\.projectName), ["a", "b", "c", "d"])
+        XCTAssertEqual(folders[0].daysSinceTouched(now: now), 10)
+    }
+
     func testMaintenanceRunnerReadsEachTaskStatus() {
         let tasks = MaintenanceTask.all.filter { ["scripts", "spotlight"].contains($0.id) }
         let results = MaintenanceRunner.parse("sweep-result:scripts:0\rsweep-result:spotlight:1\r", tasks: tasks)
