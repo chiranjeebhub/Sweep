@@ -154,6 +154,14 @@ docs/                         Release guide, screenshots and README images
 Bug reports and pull requests are welcome. Please open an issue first for larger changes, keep cleaning
 logic in `SweepCore` with tests, and make sure `swift test` passes.
 
+## More free Mac apps by me
+
+| | |
+| --- | --- |
+| [Clipstack](https://github.com/chiranjeebhub/ClipStack) | Clipboard history for your Mac. ⇧⌘V, search, paste. |
+| [NotchDeck](https://github.com/chiranjeebhub/NotchDeck) | Your MacBook notch as a hub for media, files, calendar and local dev servers. |
+| [Shotwright](https://github.com/chiranjeebhub/Shotwright) | Screenshots, screen recordings and annotations for macOS. |
+
 ## License
 
 Sweep is released under the [MIT License](LICENSE). © 2026 Chiranjeeb Jena.
