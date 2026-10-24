@@ -14,6 +14,11 @@ struct NodeModulesView: View {
             } else if model.folders.isEmpty {
                 StatusMessage(symbol: "checkmark.circle", title: "No node_modules folders found",
                               detail: model.message ?? "Nothing in your home folder outside Library and hidden folders.")
+                    .overlay(alignment: .bottom) {
+                        Button { Task { await model.scan() } } label: { Label("Rescan", systemImage: "arrow.clockwise") }
+                            .buttonStyle(OutlineButtonStyle())
+                            .padding(.bottom, 140)
+                    }
             } else {
                 columns
                 if model.visibleFolders.isEmpty {
@@ -35,11 +40,19 @@ struct NodeModulesView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             let size = ByteFormat.string(model.selectedSize)
-            Text((model.movesToTrash
+            Text(removalList + "\n\nOnly these node_modules folders are removed. Your project files stay. "
+                 + (model.movesToTrash
                   ? "This frees \(size) once you empty the Trash."
                   : "This frees \(size) right away and can't be undone. You can change this in Sweep > Settings.")
-                 + " Run npm install in a project to bring its folder back.")
+                 + " Run npm install in a project to bring its node_modules back.")
         }
+    }
+
+    /// The folders about to go, as paths ending in node_modules, so it's clear the project itself stays.
+    private var removalList: String {
+        let paths = model.selectedFolders.map(\.url.abbreviatedPath)
+        let shown = paths.prefix(5).joined(separator: "\n")
+        return paths.count > 5 ? shown + "\nand \(paths.count - 5) more" : shown
     }
 
     private var header: some View {
@@ -51,17 +64,10 @@ struct NodeModulesView: View {
                          ? "\(model.folders.count) projects, \(ByteFormat.string(model.totalSize)) of node_modules in total"
                          : "Finding node_modules folders in your home folder")
                         .font(.system(size: 13)).foregroundStyle(Theme.mutedText)
+                    Label("Only the node_modules folder is removed. Your project files stay.", systemImage: "info.circle")
+                        .font(.system(size: 12)).foregroundStyle(Theme.faintText)
                 }
                 Spacer()
-                if model.hasScanned {
-                    if model.isScanning {
-                        ProgressView().controlSize(.small).padding(.trailing, 8)
-                    } else {
-                        Button("Rescan") { Task { await model.scan() } }
-                            .buttonStyle(LinkButtonStyle())
-                            .padding(.trailing, 8)
-                    }
-                }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.system(size: 12)).foregroundStyle(Theme.faintText)
                     TextField("Search projects", text: $model.search)
@@ -105,7 +111,7 @@ struct NodeModulesView: View {
             CheckBox(isOn: Binding(get: { model.allVisibleSelected }, set: { model.setAllVisibleSelected($0) }),
                      label: "Select all")
                 .frame(width: 32, alignment: .leading)
-            ColumnLabel("Project")
+            ColumnLabel("Project · node_modules folder")
             Spacer()
             ColumnLabel("Last touched").frame(width: 150, alignment: .leading)
             ColumnLabel("Size").frame(width: 90, alignment: .trailing)
@@ -128,8 +134,10 @@ struct NodeModulesView: View {
                             .frame(width: 32, alignment: .leading)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(folder.projectName).lineLimit(1)
-                            Text(folder.projectPath)
-                                .font(.system(size: 11.5)).foregroundStyle(Theme.faintText)
+                            // The full path of the folder that gets removed, with node_modules picked out.
+                            (Text(folder.projectPath + "/").foregroundColor(Theme.faintText)
+                             + Text("node_modules").foregroundColor(Theme.accentText))
+                                .font(.system(size: 11.5))
                                 .lineLimit(1).truncationMode(.head)
                         }
                         Spacer(minLength: 12)
@@ -170,10 +178,24 @@ struct NodeModulesView: View {
                 }
             }
             Spacer()
+            Button {
+                Task { await model.scan() }
+            } label: {
+                HStack(spacing: 6) {
+                    if model.isScanning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    Text("Rescan")
+                }
+            }
+            .buttonStyle(OutlineButtonStyle())
+            .disabled(model.isScanning || model.isRemoving)
             Button("Reveal in Finder") { model.revealSelected() }
                 .buttonStyle(OutlineButtonStyle())
                 .disabled(model.selected.isEmpty)
-            Button("Remove") { confirming = true }
+            Button("Remove node_modules") { confirming = true }
                 .buttonStyle(PillButtonStyle())
                 .disabled(model.selected.isEmpty || model.isRemoving)
         }
