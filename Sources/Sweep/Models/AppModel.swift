@@ -12,6 +12,7 @@ final class AppModel: ObservableObject {
     let explorer: ExplorerModel
     let duplicates: DuplicatesModel
     let trash: TrashBinModel
+    let developer: DeveloperModel
 
     let junk: JunkModel
     let nodeModules = NodeModulesModel()
@@ -27,10 +28,12 @@ final class AppModel: ObservableObject {
         let junk = JunkModel(), privacy = PrivacyModel(), optimization = OptimizationModel()
         let storage = StorageModel()
         self.storage = storage
-        cleanup = CleanupModel(storage: storage)
+        let cleanup = CleanupModel(storage: storage)
+        self.cleanup = cleanup
         explorer = ExplorerModel(storage: storage)
         duplicates = DuplicatesModel(storage: storage)
         trash = TrashBinModel(storage: storage)
+        developer = DeveloperModel(storage: storage, cleanup: cleanup)
         self.junk = junk
         self.privacy = privacy
         self.optimization = optimization
