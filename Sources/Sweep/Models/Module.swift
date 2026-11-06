@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The screens listed in the sidebar.
 enum Module: String, CaseIterable, Identifiable {
-    case overview, largeFiles, nodeModules, uninstaller
+    case overview, storage, duplicates, nodeModules, uninstaller
     case cleanup, trashBins, history
     case smartScan, privacy, malware, optimization, maintenance, updater
 
@@ -11,7 +11,8 @@ enum Module: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .overview: "Overview"
-        case .largeFiles: "Large & Old Files"
+        case .storage: "Storage"
+        case .duplicates: "Duplicates"
         case .nodeModules: "Node Modules"
         case .uninstaller: "Applications"
         case .cleanup: "Cleanup"
@@ -29,7 +30,8 @@ enum Module: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .overview: "gauge.with.dots.needle.50percent"
-        case .largeFiles: "doc.text.magnifyingglass"
+        case .storage: "folder"
+        case .duplicates: "doc.on.doc"
         case .nodeModules: "shippingbox"
         case .uninstaller: "square.grid.2x2"
         case .cleanup: "sparkles"
@@ -47,7 +49,7 @@ enum Module: String, CaseIterable, Identifiable {
     /// Sidebar sections, in order. The first section has no heading.
     static let sections: [(title: String?, modules: [Module])] = [
         (nil, [.overview]),
-        ("Analyze", [.largeFiles, .nodeModules, .uninstaller]),
+        ("Analyze", [.storage, .duplicates, .nodeModules, .uninstaller]),
         ("Clean up", [.cleanup, .trashBins, .history]),
         ("Protect & speed up", [.smartScan, .privacy, .malware, .optimization, .maintenance, .updater]),
     ]

@@ -9,11 +9,12 @@ final class AppModel: ObservableObject {
     let storage: StorageModel
     let cleanup: CleanupModel
     let history = HistoryModel()
+    let explorer: ExplorerModel
+    let duplicates: DuplicatesModel
+    let trash: TrashBinModel
 
     let junk: JunkModel
-    let largeFiles = LargeFilesModel()
     let nodeModules = NodeModulesModel()
-    let trash = TrashModel()
     let privacy: PrivacyModel
     let optimization: OptimizationModel
     let uninstaller = UninstallerModel()
@@ -27,6 +28,9 @@ final class AppModel: ObservableObject {
         let storage = StorageModel()
         self.storage = storage
         cleanup = CleanupModel(storage: storage)
+        explorer = ExplorerModel(storage: storage)
+        duplicates = DuplicatesModel(storage: storage)
+        trash = TrashBinModel(storage: storage)
         self.junk = junk
         self.privacy = privacy
         self.optimization = optimization

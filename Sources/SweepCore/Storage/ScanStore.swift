@@ -21,9 +21,9 @@ public enum ScanStore {
     }
 
     static let minimumSavedSize: Int64 = 256 * 1024
-    static var url: URL { SweepFolders.support.appendingPathComponent("last-scan.json") }
+    public static var defaultURL: URL { SweepFolders.support.appendingPathComponent("last-scan.json") }
 
-    public static func save(_ result: ScanResult) {
+    public static func save(_ result: ScanResult, to url: URL = defaultURL) {
         var snapshot = Snapshot(date: result.date, duration: result.duration, names: [], parents: [], sizes: [], ownSizes: [],
                                 fileCounts: [], modified: [], unreadableNodes: [], largestFiles: result.largestFiles,
                                 unreadable: result.unreadable)
@@ -45,11 +45,11 @@ public enum ScanStore {
         }
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(snapshot) else { return }
-        try? FileManager.default.createDirectory(at: SweepFolders.support, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
     }
 
-    public static func load() -> ScanResult? {
+    public static func load(from url: URL = defaultURL) -> ScanResult? {
         guard let data = try? Data(contentsOf: url),
               let snapshot = try? JSONDecoder().decode(Snapshot.self, from: data),
               snapshot.version == 1, !snapshot.names.isEmpty else { return nil }
@@ -72,5 +72,5 @@ public enum ScanStore {
                           largestFiles: snapshot.largestFiles, unreadable: snapshot.unreadable)
     }
 
-    public static func clear() { try? FileManager.default.removeItem(at: url) }
+    public static func clear(at url: URL = defaultURL) { try? FileManager.default.removeItem(at: url) }
 }
