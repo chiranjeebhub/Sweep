@@ -119,7 +119,7 @@ cd Sweep
 # Run straight from the package
 swift run Sweep
 
-# Or build a double-clickable app into ./build/Sweep.app
+# Or build a double-clickable app into ./build.noindex/Sweep.app
 scripts/build-app.sh
 open build.noindex/Sweep.app
 ```
