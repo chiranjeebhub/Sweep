@@ -217,7 +217,7 @@ final class AssistantModel: ObservableObject {
             case .notRunning(let engine): return ("\(engine) isn't running.", false)
             case .running(let engine, let version):
                 let rows = snapshot.usage.map { "- \($0.type): \(size($0.size)), \(size($0.reclaimable)) reclaimable" }
-                return (["\(engine), Docker \(version)"] + rows + ["Volumes: \(snapshot.volumes.count) (never removed by Sweep)"]).joined(separator: "\n"), false)
+                return ((["\(engine), Docker \(version)"] + rows + ["Volumes: \(snapshot.volumes.count) (never removed by Sweep)"]).joined(separator: "\n"), false)
             }
 
         case "select_for_cleanup":
