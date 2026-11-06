@@ -5,6 +5,8 @@ public struct CleanResult: Sendable {
     public var freedBytes: Int64 = 0
     public var removedCount = 0
     public var failures: [URL] = []
+    /// What happened to each path, for History.
+    public var items: [CleanupItemResult] = []
 
     public init() {}
 
@@ -12,6 +14,7 @@ public struct CleanResult: Sendable {
         freedBytes += other.freedBytes
         removedCount += other.removedCount
         failures += other.failures
+        items += other.items
     }
 }
 
@@ -37,8 +40,10 @@ public struct Trasher: Sendable {
                 }
                 result.freedBytes += size
                 result.removedCount += 1
+                result.items.append(CleanupItemResult(path: url.path, bytes: size, error: nil))
             } catch {
                 result.failures.append(url)
+                result.items.append(CleanupItemResult(path: url.path, bytes: 0, error: error.localizedDescription))
             }
         }
         return result
@@ -77,12 +82,15 @@ public struct Trasher: Sendable {
         process.waitUntilExit()
 
         result.failures.removeAll { protected.contains($0) }
+        result.items.removeAll { item in protected.contains { $0.path == item.path } }
         for (url, size) in zip(protected, sizes) {
             if FileManager.default.fileExists(atPath: url.path) {
                 result.failures.append(url)
+                result.items.append(CleanupItemResult(path: url.path, bytes: 0, error: "Needs administrator rights."))
             } else {
                 result.freedBytes += size
                 result.removedCount += 1
+                result.items.append(CleanupItemResult(path: url.path, bytes: size, error: nil))
             }
         }
         return result
@@ -94,5 +102,13 @@ public struct Trasher: Sendable {
 
     static func appleScriptEscaped(_ string: String) -> String {
         string.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+extension HistoryStore {
+    /// Records a removal done through `Trasher`.
+    public func record(source: String, permanently: Bool, _ result: CleanResult) {
+        guard !result.items.isEmpty else { return }
+        append(HistoryEntry(source: source, operation: permanently ? "Deleted permanently" : "Moved to the Trash", items: result.items))
     }
 }

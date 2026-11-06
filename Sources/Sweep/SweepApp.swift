@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import SweepCore
 
 @main
 struct SweepApp: App {
@@ -28,10 +29,23 @@ struct SweepApp: App {
 /// Sweep > Settings… (⌘,).
 struct SettingsView: View {
     @AppStorage(UninstallerModel.moveToTrashKey) private var moveToTrash = true
+    @AppStorage(StorageModel.scanRootKey) private var scanRoot = ""
 
     var body: some View {
         Form {
-            Section("Uninstaller and Node Modules") {
+            Section("Scanning") {
+                LabeledContent("Folder to scan") {
+                    HStack {
+                        Text(scanRoot.isEmpty ? "Home folder" : URL(fileURLWithPath: scanRoot).abbreviatedPath)
+                            .foregroundStyle(.secondary)
+                        Button("Choose…") { chooseFolder() }
+                        if !scanRoot.isEmpty { Button("Use Home") { scanRoot = "" } }
+                    }
+                }
+                Text("Overview, Cleanup and Storage measure this folder. Sweep only ever cleans up inside your home folder.")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+            Section("Removing") {
                 Toggle("Move removed items to the Trash", isOn: $moveToTrash)
                 Text(moveToTrash
                      ? "Uninstalled apps, their files and node_modules folders go to the Trash, so you can put them back until you empty it."
@@ -40,7 +54,15 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440)
+        .frame(width: 500)
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.prompt = "Choose"
+        if panel.runModal() == .OK, let url = panel.url { scanRoot = url.path }
     }
 }
 
@@ -62,8 +84,8 @@ struct RootView: View {
         HStack(spacing: 0) {
             // The sidebar always runs under the title bar on its own, so its top doesn't
             // shift with whether the selected screen happens to fill the safe area.
-            SidebarView(optimization: app.optimization)
-                .frame(width: 240)
+            SidebarView(storage: app.storage)
+                .frame(width: 220)
                 .frame(maxHeight: .infinity)
                 .ignoresSafeArea()
             content
@@ -78,8 +100,10 @@ struct RootView: View {
 
     @ViewBuilder private var content: some View {
         switch app.selection {
+        case .overview: OverviewView(storage: app.storage)
+        case .cleanup: CleanupView(model: app.cleanup)
+        case .history: HistoryView(model: app.history)
         case .smartScan: SmartScanView(model: app.smartScan)
-        case .systemJunk: SystemJunkView(model: app.junk)
         case .largeFiles: LargeFilesView(model: app.largeFiles)
         case .nodeModules: NodeModulesView(model: app.nodeModules)
         case .trashBins: TrashBinsView(model: app.trash)

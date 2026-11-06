@@ -51,6 +51,7 @@ final class JunkModel: ObservableObject {
         isCleaning = true
         let urls = selectedItems.map(\.url)
         let result = await background { Trasher().trash(urls) }
+        HistoryStore.shared.record(source: "System Junk", permanently: false, result)
         LastRun.mark(.cleanup)
         isCleaning = false
         await scan()
@@ -119,7 +120,8 @@ final class LargeFilesModel: ObservableObject {
 
     func removeSelected() async {
         let urls = Array(selected)
-        _ = await background { Trasher().trash(urls) }
+        let result = await background { Trasher().trash(urls) }
+        HistoryStore.shared.record(source: "Large Files", permanently: false, result)
         selected = []
         await scan()
     }
@@ -228,6 +230,7 @@ final class NodeModulesModel: ObservableObject {
         let urls = selectedFolders.map(\.url)
         let trasher = Trasher(permanently: !movesToTrash)
         let result = await background { trasher.trash(urls) }
+        HistoryStore.shared.record(source: "Node Modules", permanently: !movesToTrash, result)
         let removed = Set(urls).subtracting(result.failures)
         folders.removeAll { removed.contains($0.url) }
         selected.subtract(removed)

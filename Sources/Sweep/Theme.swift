@@ -4,6 +4,9 @@ import SwiftUI
 enum Theme {
     static let window = Color(hex: 0x121318)
     static let panel = Color(hex: 0x1B1C23)
+    static let sidebar = Color(hex: 0x16171D)
+    static let rowSelected = Color(hex: 0x2A2C38)
+    static let hairline = Color(hex: 0x1F2029)
     static let footer = Color(hex: 0x16171D)
     static let surface = Color(hex: 0x24252E)
     static let border = Color(hex: 0x2C2D37)
@@ -23,6 +26,9 @@ enum Theme {
     static let speed = Color(hex: 0x5FE0A8)
     static let danger = Color(hex: 0xFF8A65)
     static let lavender = Color(hex: 0xB48CFF)
+    static let caution = Color(hex: 0xFFB066)
+    static let safe = Color(hex: 0x5FE0A8)
+    static let critical = Color(hex: 0xFF6B6B)
 
     /// Text colour that reads well on top of a bright accent fill.
     static let onAccent = Color(hex: 0x0B1020)
@@ -40,14 +46,14 @@ extension Color {
 
 // MARK: Buttons
 
-/// The rounded pill used for every main action.
+/// The filled button for a screen's main action. Kept compact, the way native Mac utilities are.
 struct PillButtonStyle: ButtonStyle {
     var fill: Color = Theme.accent
     var foreground: Color = Theme.onAccent
-    var height: CGFloat = 44
+    var height: CGFloat = 32
 
     func makeBody(configuration: Configuration) -> some View {
-        PillBody(configuration: configuration, fill: fill, foreground: foreground, height: height)
+        PillBody(configuration: configuration, fill: fill, foreground: foreground, height: min(height, 32))
     }
 
     private struct PillBody: View {
@@ -59,28 +65,41 @@ struct PillButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .font(.system(size: 15, weight: .bold))
-                .padding(.horizontal, 30)
+                .font(.system(size: 13, weight: .semibold))
+                .padding(.horizontal, 14)
                 .frame(height: height)
                 .foregroundStyle(foreground)
-                .background(Capsule().fill(fill))
+                .background(RoundedRectangle(cornerRadius: 6).fill(fill))
                 .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
-                .contentShape(Capsule())
+                .contentShape(RoundedRectangle(cornerRadius: 6))
         }
     }
 }
 
-/// An outlined pill for secondary actions such as "Reveal in Finder".
+/// An outlined button for secondary actions such as "Reveal in Finder" or "Rescan".
 struct OutlineButtonStyle: ButtonStyle {
+    var height: CGFloat = 28
+
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 14, weight: .semibold))
-            .padding(.horizontal, 20)
-            .frame(height: 44)
-            .foregroundStyle(Theme.secondaryText)
-            .background(Capsule().strokeBorder(Color(hex: 0x3A3B47)))
-            .opacity(configuration.isPressed ? 0.7 : 1)
-            .contentShape(Capsule())
+        OutlineBody(configuration: configuration, height: height)
+    }
+
+    private struct OutlineBody: View {
+        let configuration: ButtonStyleConfiguration
+        let height: CGFloat
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 12.5, weight: .medium))
+                .padding(.horizontal, 11)
+                .frame(height: height)
+                .foregroundStyle(Theme.secondaryText)
+                .background(RoundedRectangle(cornerRadius: 6).fill(configuration.isPressed ? Theme.surface : Color.clear))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color(hex: 0x3A3B47)))
+                .opacity(isEnabled ? 1 : 0.4)
+                .contentShape(RoundedRectangle(cornerRadius: 6))
+        }
     }
 }
 
@@ -99,30 +118,32 @@ struct LinkButtonStyle: ButtonStyle {
 
 extension View {
     /// The bordered card used for panels and summaries.
-    func card(radius: CGFloat = 12) -> some View {
+    func card(radius: CGFloat = 10) -> some View {
         background(RoundedRectangle(cornerRadius: radius).fill(Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(Theme.border))
     }
 }
 
-/// Title and subtitle at the top of each screen.
+/// Title and subtitle at the top of each screen, above a hairline.
 struct ScreenHeader<Trailing: View>: View {
     let title: String
     let subtitle: String
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.system(size: 22, weight: .bold))
-                Text(subtitle).font(.system(size: 13)).foregroundStyle(Theme.mutedText)
+        HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 15, weight: .semibold))
+                if !subtitle.isEmpty {
+                    Text(subtitle).font(.system(size: 12)).foregroundStyle(Theme.mutedText).lineLimit(1)
+                }
             }
             Spacer()
             trailing
         }
-        .padding(.horizontal, 32)
-        .padding(.top, 28)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 24)
+        .frame(height: 56)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.divider).frame(height: 1) }
     }
 }
 
@@ -138,8 +159,8 @@ struct FooterBar<Content: View>: View {
 
     var body: some View {
         HStack { content }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
             .background(Theme.footer)
             .overlay(alignment: .top) { Rectangle().fill(Theme.divider).frame(height: 1) }
     }
@@ -183,9 +204,8 @@ struct ColumnLabel: View {
     let text: String
     init(_ text: String) { self.text = text }
     var body: some View {
-        Text(text.uppercased())
+        Text(text.prefix(1).uppercased() + text.dropFirst().lowercased())
             .font(.system(size: 11, weight: .semibold))
-            .tracking(0.5)
             .foregroundStyle(Theme.faintText)
     }
 }

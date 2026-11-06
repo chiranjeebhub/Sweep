@@ -35,6 +35,7 @@ final class MalwareModel: ObservableObject {
         isRemoving = true
         let chosen = selectedThreats
         let outcome = await background { MalwareRemover.remove(chosen) }
+        HistoryStore.shared.record(source: "Malware", permanently: false, outcome.result)
         LastRun.mark(.protection)
         await scan()
         isRemoving = false

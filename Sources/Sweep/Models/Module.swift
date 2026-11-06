@@ -2,48 +2,53 @@ import SwiftUI
 
 /// The screens listed in the sidebar.
 enum Module: String, CaseIterable, Identifiable {
-    case smartScan, systemJunk, largeFiles, nodeModules, trashBins, privacy, malware, optimization, maintenance, uninstaller, updater
+    case overview, largeFiles, nodeModules, uninstaller
+    case cleanup, trashBins, history
+    case smartScan, privacy, malware, optimization, maintenance, updater
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .smartScan: "Smart Scan"
-        case .systemJunk: "System Junk"
+        case .overview: "Overview"
         case .largeFiles: "Large & Old Files"
         case .nodeModules: "Node Modules"
-        case .trashBins: "Trash Bins"
+        case .uninstaller: "Applications"
+        case .cleanup: "Cleanup"
+        case .trashBins: "Trash"
+        case .history: "History"
+        case .smartScan: "Smart Scan"
         case .privacy: "Privacy"
-        case .malware: "Malware Removal"
+        case .malware: "Malware"
         case .optimization: "Optimization"
         case .maintenance: "Maintenance"
-        case .uninstaller: "Uninstaller"
         case .updater: "Updater"
         }
     }
 
     var symbol: String {
         switch self {
-        case .smartScan: "scope"
-        case .systemJunk: "trash"
-        case .largeFiles: "folder"
+        case .overview: "gauge.with.dots.needle.50percent"
+        case .largeFiles: "doc.text.magnifyingglass"
         case .nodeModules: "shippingbox"
-        case .trashBins: "trash.square"
-        case .privacy: "shield"
-        case .malware: "ladybug"
+        case .uninstaller: "square.grid.2x2"
+        case .cleanup: "sparkles"
+        case .trashBins: "trash"
+        case .history: "clock.arrow.circlepath"
+        case .smartScan: "scope"
+        case .privacy: "hand.raised"
+        case .malware: "shield"
         case .optimization: "bolt"
         case .maintenance: "wrench.and.screwdriver"
-        case .uninstaller: "square.grid.2x2"
-        case .updater: "arrow.clockwise"
+        case .updater: "arrow.triangle.2.circlepath"
         }
     }
 
     /// Sidebar sections, in order. The first section has no heading.
     static let sections: [(title: String?, modules: [Module])] = [
-        (nil, [.smartScan]),
-        ("Cleanup", [.systemJunk, .largeFiles, .nodeModules, .trashBins]),
-        ("Protection", [.privacy, .malware]),
-        ("Speed", [.optimization, .maintenance]),
-        ("Applications", [.uninstaller, .updater]),
+        (nil, [.overview]),
+        ("Analyze", [.largeFiles, .nodeModules, .uninstaller]),
+        ("Clean up", [.cleanup, .trashBins, .history]),
+        ("Protect & speed up", [.smartScan, .privacy, .malware, .optimization, .maintenance, .updater]),
     ]
 }

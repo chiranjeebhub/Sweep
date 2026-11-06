@@ -114,7 +114,7 @@ struct SmartScanView: View {
                         ResultCard.Row(label: $0.title, value: ByteFormat.string(junk.selectedSize(of: $0)))
                     },
                     isIncluded: $model.includeCleanup,
-                    review: { app.selection = .systemJunk })
+                    review: { app.selection = .cleanup })
                 ResultCard(
                     title: "Protection", symbol: "shield", tint: Theme.protection,
                     headline: "\(privacy.selectedCount)", caption: "kinds of privacy traces",

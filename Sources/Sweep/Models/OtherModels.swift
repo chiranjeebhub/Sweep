@@ -69,6 +69,7 @@ final class PrivacyModel: ObservableObject {
         }
         let toTrash = urls
         let result = await background { Trasher().trash(toTrash) }
+        HistoryStore.shared.record(source: "Privacy", permanently: false, result)
         skippedBrowsers = skipped
         LastRun.mark(.protection)
         await scan()
@@ -271,6 +272,7 @@ final class UninstallerModel: ObservableObject {
         let urls = [app.url] + selectedRemnantURLs
         let trasher = trasher
         let result = await background { trasher.trashAskingForAdmin(urls) }
+        HistoryStore.shared.record(source: "Uninstall \(app.name)", permanently: !movesToTrash, result)
         message = result.failures.contains(app.url)
             ? "\(app.name) couldn't be removed. It may be protected by macOS."
             : (movesToTrash ? "Moved \(app.name) to the Trash" : "Deleted \(app.name)")
@@ -290,6 +292,7 @@ final class UninstallerModel: ObservableObject {
         let urls = selectedRemnantURLs
         let trasher = trasher
         let result = await background { trasher.trashAskingForAdmin(urls) }
+        HistoryStore.shared.record(source: "Reset \(app.name)", permanently: !movesToTrash, result)
         message = "Reset \(app.name), freeing \(ByteFormat.string(result.freedBytes))." + failureNote(result.failures)
         loadRemnants()
     }
@@ -298,6 +301,7 @@ final class UninstallerModel: ObservableObject {
         let urls = Array(selectedLeftovers)
         let trasher = trasher
         let result = await background { trasher.trash(urls) }
+        HistoryStore.shared.record(source: "App leftovers", permanently: !movesToTrash, result)
         message = "Removed \(result.removedCount) leftover folders, freeing \(ByteFormat.string(result.freedBytes))."
             + failureNote(result.failures)
         selectedLeftovers = []

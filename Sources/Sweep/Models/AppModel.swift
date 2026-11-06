@@ -4,7 +4,11 @@ import SweepCore
 /// Shared state for the whole window: the selected screen and each screen's model.
 @MainActor
 final class AppModel: ObservableObject {
-    @Published var selection: Module = .smartScan
+    @Published var selection: Module = .overview
+
+    let storage: StorageModel
+    let cleanup: CleanupModel
+    let history = HistoryModel()
 
     let junk: JunkModel
     let largeFiles = LargeFilesModel()
@@ -20,6 +24,9 @@ final class AppModel: ObservableObject {
 
     init() {
         let junk = JunkModel(), privacy = PrivacyModel(), optimization = OptimizationModel()
+        let storage = StorageModel()
+        self.storage = storage
+        cleanup = CleanupModel(storage: storage)
         self.junk = junk
         self.privacy = privacy
         self.optimization = optimization
