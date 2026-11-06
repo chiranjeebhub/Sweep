@@ -21,6 +21,12 @@ public struct DuplicateGroup: Identifiable, Hashable, Sendable {
     public let size: Int64
     public let files: [DuplicateFile]
 
+    public init(id: String, size: Int64, files: [DuplicateFile]) {
+        self.id = id
+        self.size = size
+        self.files = files
+    }
+
     /// Space freed by keeping one copy, leaving out copies that are clones.
     public var reclaimable: Int64 {
         let removable = files.dropFirst().filter { !$0.isClone }.count
