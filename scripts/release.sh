@@ -22,7 +22,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="$ROOT/build/Sweep.app"
+APP="$ROOT/build.noindex/Sweep.app"
 DIST="$ROOT/dist"
 ENTITLEMENTS="$ROOT/Resources/Sweep.entitlements"
 

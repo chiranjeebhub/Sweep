@@ -121,7 +121,7 @@ swift run Sweep
 
 # Or build a double-clickable app into ./build/Sweep.app
 scripts/build-app.sh
-open build/Sweep.app
+open build.noindex/Sweep.app
 ```
 
 You can also open `Package.swift` in Xcode and run the **Sweep** scheme. Run the tests with `swift test`.
@@ -145,7 +145,7 @@ Resources/Info.plist          App bundle metadata used by scripts/build-app.sh
 Resources/AppIcon.svg         Source artwork for the app icon
 Resources/AppIcon.icns        App icon built from AppIcon.svg
 Resources/Sweep.entitlements  Hardened-runtime entitlements used when signing a release
-scripts/build-app.sh          Builds build/Sweep.app
+scripts/build-app.sh          Builds build.noindex/Sweep.app
 scripts/release.sh            Signed, notarized DMG release to GitHub (docs/RELEASING.md)
 docs/                         Release guide, screenshots and README images
 ```
