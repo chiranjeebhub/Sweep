@@ -5,8 +5,7 @@ import SweepCore
 @main
 struct SweepApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var model = AppModel()
-    @AppStorage(MenuBarSettings.key) private var showsInMenuBar = true
+    @StateObject private var model = AppModel.shared
 
     var body: some Scene {
         WindowGroup(id: "main") {
@@ -24,13 +23,6 @@ struct SweepApp: App {
         Settings {
             SettingsView().preferredColorScheme(.dark)
         }
-
-        MenuBarExtra(isInserted: $showsInMenuBar) {
-            MenuBarView(storage: model.storage).environmentObject(model)
-        } label: {
-            Image(systemName: "internaldrive")
-        }
-        .menuBarExtraStyle(.window)
     }
 }
 
@@ -62,6 +54,7 @@ struct SettingsView: View {
             }
             Section("Menu bar") {
                 Toggle("Show Sweep in the menu bar", isOn: $showsInMenuBar)
+                    .onChange(of: showsInMenuBar) { _ in StatusItemController.shared.update() }
                 Text("Free space, the Trash and shortcuts from the menu bar. Closing the window keeps Sweep running there.")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
             }
@@ -96,11 +89,14 @@ struct SettingsView: View {
     }
 }
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Needed when launched with `swift run`, where there is no app bundle to say this is a regular app.
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
+        // The menu bar item is plain AppKit. A SwiftUI MenuBarExtra kept the app's scene graph updating forever.
+        StatusItemController.shared.update()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { !MenuBarSettings.isEnabled }
@@ -109,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// Sidebar plus the selected screen.
 struct RootView: View {
     @EnvironmentObject private var app: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         HStack(spacing: 0) {
@@ -128,7 +125,11 @@ struct RootView: View {
         .foregroundStyle(Theme.text)
         .ignoresSafeArea()
         .background(WindowChrome())
-        .onAppear { app.optimization.start() }
+        .onAppear {
+            app.optimization.start()
+            let openWindow = openWindow
+            app.openMainWindow = { openWindow(id: "main") }
+        }
     }
 
     @ViewBuilder private var content: some View {

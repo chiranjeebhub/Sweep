@@ -4,6 +4,10 @@ import SweepCore
 /// Shared state for the whole window: the selected screen and each screen's model.
 @MainActor
 final class AppModel: ObservableObject {
+    static let shared = AppModel()
+
+    /// Opens the main window again after it was closed; set by the window itself.
+    var openMainWindow: (() -> Void)?
     @Published var selection: Module = .overview {
         didSet { lastTab[selection.group.id] = selection }
     }

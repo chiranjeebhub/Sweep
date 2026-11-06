@@ -6,7 +6,6 @@ import SweepCore
 struct MenuBarView: View {
     @EnvironmentObject private var app: AppModel
     @ObservedObject var storage: StorageModel
-    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -52,7 +51,7 @@ struct MenuBarView: View {
         .frame(width: 300)
         .background(Theme.window)
         .foregroundStyle(Theme.text)
-        .preferredColorScheme(.dark)
+        .environment(\.colorScheme, .dark)
         .task {
             storage.refreshVolume()
             await storage.refreshTrash()
@@ -98,11 +97,12 @@ struct MenuBarView: View {
 
     private func open(_ module: Module) {
         app.selection = module
+        StatusItemController.shared.close()
         NSApplication.shared.activate(ignoringOtherApps: true)
         if let window = NSApplication.shared.windows.first(where: { $0.identifier?.rawValue.hasPrefix("main") == true && $0.canBecomeMain }) {
             window.makeKeyAndOrderFront(nil)
         } else {
-            openWindow(id: "main")
+            app.openMainWindow?()
         }
     }
 }
