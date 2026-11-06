@@ -1,6 +1,9 @@
 import AppKit
 import SweepCore
 
+/// The ObjC runtime also exports a `Category` type; pin the name to SweepCore's enum in this module.
+typealias Category = SweepCore.Category
+
 /// The scan behind Overview, Cleanup and Storage: what was found, classified and suggested.
 @MainActor
 final class StorageModel: ObservableObject {
