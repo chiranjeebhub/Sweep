@@ -14,6 +14,7 @@ final class AppModel: ObservableObject {
     let trash: TrashBinModel
     let developer: DeveloperModel
     let docker = DockerModel()
+    lazy var assistant = AssistantModel(app: self)
 
     let junk: JunkModel
     let nodeModules = NodeModulesModel()

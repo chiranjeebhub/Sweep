@@ -6,9 +6,10 @@ import SweepCore
 struct SweepApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var model = AppModel()
+    @AppStorage(MenuBarSettings.key) private var showsInMenuBar = true
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             RootView()
                 .environmentObject(model)
                 .frame(minWidth: 1100, minHeight: 700)
@@ -23,13 +24,27 @@ struct SweepApp: App {
         Settings {
             SettingsView().preferredColorScheme(.dark)
         }
+
+        MenuBarExtra(isInserted: $showsInMenuBar) {
+            MenuBarView(storage: model.storage).environmentObject(model)
+        } label: {
+            Image(systemName: "internaldrive")
+        }
+        .menuBarExtraStyle(.window)
     }
+}
+
+enum MenuBarSettings {
+    static let key = "menuBar.enabled"
+    static var isEnabled: Bool { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
 }
 
 /// Sweep > Settings… (⌘,).
 struct SettingsView: View {
     @AppStorage(UninstallerModel.moveToTrashKey) private var moveToTrash = true
     @AppStorage(StorageModel.scanRootKey) private var scanRoot = ""
+    @AppStorage(MenuBarSettings.key) private var showsInMenuBar = true
+    @State private var hasKey = APIKeyStore.load() != nil
 
     var body: some View {
         Form {
@@ -43,6 +58,21 @@ struct SettingsView: View {
                     }
                 }
                 Text("Overview, Cleanup and Storage measure this folder. Sweep only ever cleans up inside your home folder.")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+            Section("Menu bar") {
+                Toggle("Show Sweep in the menu bar", isOn: $showsInMenuBar)
+                Text("Free space, the Trash and shortcuts from the menu bar. Closing the window keeps Sweep running there.")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+            Section("Ask Sweep") {
+                LabeledContent("Claude API key") {
+                    HStack {
+                        Text(hasKey ? "Saved in your keychain" : "Not set").foregroundStyle(.secondary)
+                        if hasKey { Button("Remove") { APIKeyStore.delete(); hasKey = false } }
+                    }
+                }
+                Text("Optional. Used only when you ask a question on the Ask Sweep screen.")
                     .font(.system(size: 12)).foregroundStyle(.secondary)
             }
             Section("Removing") {
@@ -73,7 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { !MenuBarSettings.isEnabled }
 }
 
 /// Sidebar plus the selected screen.
@@ -107,6 +137,7 @@ struct RootView: View {
         case .storage: StorageView(model: app.explorer)
         case .developer: DeveloperView(model: app.developer, storage: app.storage)
         case .docker: DockerView(model: app.docker)
+        case .assistant: AssistantView(model: app.assistant)
         case .duplicates: DuplicatesView(model: app.duplicates)
         case .nodeModules: NodeModulesView(model: app.nodeModules)
         case .trashBins: TrashView(model: app.trash)

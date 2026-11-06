@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The screens listed in the sidebar.
 enum Module: String, CaseIterable, Identifiable {
-    case overview, storage, developer, docker, duplicates, nodeModules, uninstaller
+    case overview, assistant, storage, developer, docker, duplicates, nodeModules, uninstaller
     case cleanup, trashBins, history
     case smartScan, privacy, malware, optimization, maintenance, updater
 
@@ -11,6 +11,7 @@ enum Module: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .overview: "Overview"
+        case .assistant: "Ask Sweep"
         case .storage: "Storage"
         case .developer: "Developer"
         case .docker: "Docker"
@@ -32,6 +33,7 @@ enum Module: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .overview: "gauge.with.dots.needle.50percent"
+        case .assistant: "bubble.left.and.text.bubble.right"
         case .storage: "folder"
         case .developer: "hammer"
         case .docker: "shippingbox.circle"
@@ -52,7 +54,7 @@ enum Module: String, CaseIterable, Identifiable {
 
     /// Sidebar sections, in order. The first section has no heading.
     static let sections: [(title: String?, modules: [Module])] = [
-        (nil, [.overview]),
+        (nil, [.overview, .assistant]),
         ("Analyze", [.storage, .developer, .docker, .duplicates, .nodeModules, .uninstaller]),
         ("Clean up", [.cleanup, .trashBins, .history]),
         ("Protect & speed up", [.smartScan, .privacy, .malware, .optimization, .maintenance, .updater]),
