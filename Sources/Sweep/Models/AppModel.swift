@@ -4,7 +4,15 @@ import SweepCore
 /// Shared state for the whole window: the selected screen and each screen's model.
 @MainActor
 final class AppModel: ObservableObject {
-    @Published var selection: Module = .overview
+    @Published var selection: Module = .overview {
+        didSet { lastTab[selection.group.id] = selection }
+    }
+    /// The tab last used in each sidebar entry, so coming back lands where the user left off.
+    private var lastTab: [String: Module] = [:]
+
+    func open(_ group: NavGroup) {
+        selection = lastTab[group.id] ?? group.modules[0]
+    }
 
     let storage: StorageModel
     let cleanup: CleanupModel

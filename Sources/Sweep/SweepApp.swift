@@ -118,8 +118,11 @@ struct RootView: View {
                 .frame(width: 220)
                 .frame(maxHeight: .infinity)
                 .ignoresSafeArea()
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 0) {
+                if app.selection.group.modules.count > 1 { TabStrip(group: app.selection.group) }
+                content.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Theme.window)
         .foregroundStyle(Theme.text)
@@ -166,5 +169,34 @@ private struct WindowChrome: NSViewRepresentable {
             window.titleVisibility = .hidden
             window.isMovableByWindowBackground = true
         }
+    }
+}
+
+/// Tabs for the screens that share one sidebar entry.
+struct TabStrip: View {
+    @EnvironmentObject private var app: AppModel
+    let group: NavGroup
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(group.modules) { module in
+                let isActive = app.selection == module
+                Button { app.selection = module } label: {
+                    Text(module.tabTitle)
+                        .font(.system(size: 12, weight: isActive ? .semibold : .regular))
+                        .foregroundStyle(isActive ? Theme.text : Theme.mutedText)
+                        .padding(.horizontal, 12)
+                        .frame(height: 26)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(isActive ? Theme.rowSelected : Color.clear))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isActive ? .isSelected : [])
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 4)
     }
 }

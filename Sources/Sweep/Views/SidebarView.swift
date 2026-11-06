@@ -24,8 +24,8 @@ struct SidebarView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
-                    ForEach(Module.sections.indices, id: \.self) { index in
-                        let section = Module.sections[index]
+                    ForEach(NavGroup.sections.indices, id: \.self) { index in
+                        let section = NavGroup.sections[index]
                         VStack(alignment: .leading, spacing: 1) {
                             if let title = section.title {
                                 Text(title)
@@ -34,8 +34,8 @@ struct SidebarView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.bottom, 4)
                             }
-                            ForEach(section.modules) { module in
-                                row(module)
+                            ForEach(section.groups) { group in
+                                row(group)
                             }
                         }
                     }
@@ -57,21 +57,21 @@ struct SidebarView: View {
         }
     }
 
-    private func row(_ module: Module) -> some View {
-        let isActive = app.selection == module
+    private func row(_ group: NavGroup) -> some View {
+        let isActive = group.modules.contains(app.selection)
         return Button {
-            app.selection = module
+            if !isActive { app.open(group) }
         } label: {
             HStack(spacing: 9) {
-                Image(systemName: module.symbol)
+                Image(systemName: group.symbol)
                     .font(.system(size: 13))
                     .foregroundStyle(isActive ? Theme.accent : Theme.faintText)
                     .frame(width: 18)
-                Text(module.title)
+                Text(group.title)
                     .font(.system(size: 13))
                     .foregroundStyle(isActive ? Theme.text : Theme.secondaryText)
                 Spacer()
-                if let count = count(for: module), count > 0 {
+                if let count = count(for: group), count > 0 {
                     Text("\(count)").font(.system(size: 12).monospacedDigit()).foregroundStyle(Theme.faintText)
                 }
             }
@@ -84,11 +84,8 @@ struct SidebarView: View {
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
-    private func count(for module: Module) -> Int? {
-        switch module {
-        case .cleanup: return storage.actionableCount
-        default: return nil
-        }
+    private func count(for group: NavGroup) -> Int? {
+        group.id == "cleanup" ? storage.actionableCount : nil
     }
 
     private var footer: some View {
