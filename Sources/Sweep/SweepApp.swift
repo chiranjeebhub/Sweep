@@ -106,6 +106,7 @@ struct RootView: View {
         case .smartScan: SmartScanView(model: app.smartScan)
         case .storage: StorageView(model: app.explorer)
         case .developer: DeveloperView(model: app.developer, storage: app.storage)
+        case .docker: DockerView(model: app.docker)
         case .duplicates: DuplicatesView(model: app.duplicates)
         case .nodeModules: NodeModulesView(model: app.nodeModules)
         case .trashBins: TrashView(model: app.trash)

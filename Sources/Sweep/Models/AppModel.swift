@@ -13,6 +13,7 @@ final class AppModel: ObservableObject {
     let duplicates: DuplicatesModel
     let trash: TrashBinModel
     let developer: DeveloperModel
+    let docker = DockerModel()
 
     let junk: JunkModel
     let nodeModules = NodeModulesModel()

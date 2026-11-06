@@ -70,4 +70,20 @@ final class DeveloperTests: XCTestCase {
         XCTAssertFalse(findings.first?.masked.contains(token) ?? true)
         XCTAssertTrue(findings.first?.masked.hasPrefix("ghp_") ?? false)
     }
+
+    func testDockerSizesParseDecimalUnits() {
+        XCTAssertEqual(DockerClient.bytes("1.5GB"), 1_500_000_000)
+        XCTAssertEqual(DockerClient.bytes("512MB (40%)"), 512_000_000)
+        XCTAssertEqual(DockerClient.bytes("12.5kB"), 12_500)
+        XCTAssertEqual(DockerClient.bytes("0B"), 0)
+        XCTAssertEqual(DockerClient.bytes(nil), 0)
+    }
+
+    func testDockerActionsNeverForce() {
+        let snapshot = DockerSnapshot(status: .notInstalled, usage: [], containers: [], images: [], volumes: [], diskImage: nil)
+        for action in [DockerAction.pruneContainers(snapshot), .pruneDanglingImages(snapshot), .pruneUnusedImages(snapshot), .pruneBuildCache(snapshot)] {
+            XCTAssertFalse(action.arguments.contains { $0 == "-f" || $0 == "--force" })
+            XCTAssertFalse(action.arguments.contains("volume"))
+        }
+    }
 }
