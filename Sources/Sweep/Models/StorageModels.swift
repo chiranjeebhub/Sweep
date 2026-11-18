@@ -52,10 +52,25 @@ final class StorageModel: ObservableObject {
     var likelyRecoverable: Int64 { allRecommendations.filter { $0.tier == .likelySafe }.reduce(0) { $0 + $1.size } }
     var actionableCount: Int { allRecommendations.filter(\.isActionable).count }
 
-    /// Loads the last saved scan once, so the Overview isn't empty after a restart.
+    /// Starts reading the last saved scan as soon as the app launches, before any window draws,
+    /// and marks the model as loading so screens show a placeholder instead of the empty state.
+    init() {
+        volume = VolumeInfo.current(for: scanRoot)
+        if FileManager.default.fileExists(atPath: ScanStore.defaultURL.path) {
+            isLoading = true
+            Task { await loadSaved() }
+        } else {
+            hasLoaded = true
+        }
+    }
+
+    /// Refreshes the live numbers; the saved scan itself is loaded once, at launch.
     func loadSavedIfNeeded() async {
         refreshVolume()
         await refreshTrash()
+    }
+
+    private func loadSaved() async {
         guard !hasLoaded else { return }
         hasLoaded = true
         isLoading = true

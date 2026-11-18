@@ -20,7 +20,9 @@ struct OverviewView: View {
                             ScanProgressLine(storage: storage)
                             Text("Read-only. You can keep using your Mac while Sweep scans.")
                                 .font(.system(size: 12)).foregroundStyle(Theme.faintText)
-                        } else if !storage.isLoading {
+                        } else if storage.isLoading {
+                            loadingPlaceholder
+                        } else {
                             emptyState
                         }
                     } else {
@@ -114,6 +116,28 @@ struct OverviewView: View {
             Text(value).font(.system(size: 22, weight: .semibold).monospacedDigit()).foregroundStyle(color)
         }
         .help(help)
+    }
+
+    /// Same shape as the scan results, shown for the moment it takes to read the saved scan.
+    private var loadingPlaceholder: some View {
+        VStack(alignment: .leading, spacing: 26) {
+            Rectangle().fill(Theme.divider).frame(height: 1)
+            HStack(alignment: .top, spacing: 44) {
+                placeholderBlock(rows: 4).frame(maxWidth: .infinity, alignment: .topLeading).layoutPriority(1)
+                placeholderBlock(rows: 5).frame(width: 340, alignment: .topLeading)
+            }
+        }
+        .accessibilityLabel("Loading last scan")
+    }
+
+    private func placeholderBlock(rows: Int) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            RoundedRectangle(cornerRadius: 4).fill(Theme.divider).frame(width: 120, height: 14)
+            ForEach(0..<rows, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 4).fill(Theme.divider.opacity(0.7))
+                    .frame(height: 12).frame(maxWidth: index.isMultiple(of: 2) ? .infinity : 220, alignment: .leading)
+            }
+        }
     }
 
     private var emptyState: some View {
