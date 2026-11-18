@@ -102,8 +102,6 @@ struct SidebarView: View {
                         Text("Scanned \(RelativeDate.string(result.date).lowercased())").font(.system(size: 12)).foregroundStyle(Theme.mutedText)
                         Text(result.rootURL.abbreviatedPath).font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.faintText)
                     }
-                } else if storage.isLoading {
-                    Text(" ").font(.system(size: 12))
                 } else {
                     Text("Not scanned yet").font(.system(size: 12)).foregroundStyle(Theme.mutedText)
                 }

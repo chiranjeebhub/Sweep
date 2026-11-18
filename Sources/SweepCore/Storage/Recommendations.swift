@@ -23,7 +23,7 @@ public struct Recommendation: Identifiable, Hashable, Codable, Sendable {
     /// Where it was found: "Scan", or a Developer tool's name.
     public let source: String
     /// "Leftover", "Superseded" or "Inactive" for items that are no longer needed.
-    public let badge: String?
+    public var badge: String?
     /// When the related project was last worked on, for dependencies and build output.
     public var lastActivity: Date?
 
@@ -62,7 +62,9 @@ public struct Recommendation: Identifiable, Hashable, Codable, Sendable {
 
 /// Turns a classified scan into suggestions by applying each matched rule's policy.
 public enum RecommendationEngine {
-    public static func recommendations(for root: DirNode) -> [Recommendation] {
+    /// With `activity` false, project activity dates are left out: finding them walks each project on
+    /// disk, which is slow. `addingActivity` fills them in later.
+    public static func recommendations(for root: DirNode, activity: Bool = true) -> [Recommendation] {
         var results: [Recommendation] = []
         root.walk { node in
             guard let rule = node.ownRule, let policy = rule.policy else { return }
@@ -76,7 +78,7 @@ public enum RecommendationEngine {
                 let isWhole = target === node
                 let title = isWhole ? rule.label : "\(rule.label) · \(displayName(target.name))"
                 var lastActivity: Date?
-                if rule.category == .buildArtifacts || ["node.modules", "python.venv", "cocoapods.pods"].contains(rule.id) {
+                if activity, needsActivity(category: rule.category, ruleID: rule.id) {
                     lastActivity = NodeModulesScanner.lastTouched(project: target.url.deletingLastPathComponent())
                 }
                 let inactive = lastActivity.map { Date().timeIntervalSince($0) > 90 * 86_400 } ?? false
@@ -101,6 +103,29 @@ public enum RecommendationEngine {
             }
         }
         return results.sorted { $0.size > $1.size }
+    }
+
+    static func needsActivity(category: Category, ruleID: String) -> Bool {
+        category == .buildArtifacts || ["node.modules", "python.venv", "cocoapods.pods"].contains(ruleID)
+    }
+
+    /// Looks up when each project was last worked on, in parallel, and marks long-untouched ones Inactive.
+    public static func addingActivity(_ items: [Recommendation]) -> [Recommendation] {
+        var items = items
+        let indices = items.indices.filter { items[$0].source == "Scan" && needsActivity(category: items[$0].category, ruleID: items[$0].ruleID) }
+        let projects = indices.map { URL(fileURLWithPath: items[$0].primaryPath).deletingLastPathComponent() }
+        var dates = [Date?](repeating: nil, count: projects.count)
+        let lock = NSLock()
+        DispatchQueue.concurrentPerform(iterations: projects.count) { index in
+            let date = NodeModulesScanner.lastTouched(project: projects[index])
+            lock.lock(); dates[index] = date; lock.unlock()
+        }
+        for (position, index) in indices.enumerated() {
+            guard let date = dates[position] else { continue }
+            items[index].lastActivity = date
+            if items[index].badge == nil, Date().timeIntervalSince(date) > 90 * 86_400 { items[index].badge = "Inactive" }
+        }
+        return items
     }
 
     /// A friendlier name for a folder: the project for build output, the app's name for an app cache when it can be guessed.

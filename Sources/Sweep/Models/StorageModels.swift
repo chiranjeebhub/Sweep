@@ -13,7 +13,6 @@ final class StorageModel: ObservableObject {
     @Published private(set) var summary: ScanSummary?
     @Published private(set) var recommendations: [Recommendation] = []
     @Published private(set) var isScanning = false
-    @Published private(set) var isLoading = false
     @Published private(set) var progressFiles = 0
     @Published private(set) var progressBytes: Int64 = 0
     @Published private(set) var volume: VolumeInfo?
@@ -25,7 +24,6 @@ final class StorageModel: ObservableObject {
 
     private var progress: ScanProgress?
     private var timer: Timer?
-    private var hasLoaded = false
 
     var scanRoot: URL {
         if let path = UserDefaults.standard.string(forKey: Self.scanRootKey), !path.isEmpty,
@@ -52,36 +50,28 @@ final class StorageModel: ObservableObject {
     var likelyRecoverable: Int64 { allRecommendations.filter { $0.tier == .likelySafe }.reduce(0) { $0 + $1.size } }
     var actionableCount: Int { allRecommendations.filter(\.isActionable).count }
 
-    /// Starts reading the last saved scan as soon as the app launches, before any window draws,
-    /// and marks the model as loading so screens show a placeholder instead of the empty state.
+    /// Reads the last saved scan before any window draws, so the Overview opens complete instead of
+    /// empty. Project activity dates need a walk over each project, so they are filled in afterwards.
     init() {
         volume = VolumeInfo.current(for: scanRoot)
-        if FileManager.default.fileExists(atPath: ScanStore.defaultURL.path) {
-            isLoading = true
-            Task { await loadSaved() }
-        } else {
-            hasLoaded = true
-        }
+        guard let saved = ScanStore.load() else { return }
+        Classifier().classify(saved.root)
+        let recommendations = RecommendationEngine.recommendations(for: saved.root, activity: false)
+        apply((saved, recommendations, ScanSummary(root: saved.root, recommendations: recommendations)))
+        Task { await addActivity(to: saved) }
     }
 
-    /// Refreshes the live numbers; the saved scan itself is loaded once, at launch.
+    /// Refreshes the live numbers shown next to the scan.
     func loadSavedIfNeeded() async {
         refreshVolume()
         await refreshTrash()
     }
 
-    private func loadSaved() async {
-        guard !hasLoaded else { return }
-        hasLoaded = true
-        isLoading = true
-        let loaded: (ScanResult, [Recommendation], ScanSummary)? = await background {
-            guard let result = ScanStore.load() else { return nil }
-            return Self.analyze(result)
-        }
-        if let loaded, result == nil {
-            apply(loaded)
-        }
-        isLoading = false
+    private func addActivity(to scan: ScanResult) async {
+        let items = recommendations
+        let enriched = await background { RecommendationEngine.addingActivity(items) }
+        // A new scan may have replaced this one in the meantime.
+        if result === scan { recommendations = enriched }
     }
 
     func scan() async {
@@ -118,7 +108,7 @@ final class StorageModel: ObservableObject {
 
     nonisolated private static func analyze(_ result: ScanResult) -> (ScanResult, [Recommendation], ScanSummary) {
         Classifier().classify(result.root)
-        let recommendations = RecommendationEngine.recommendations(for: result.root)
+        let recommendations = RecommendationEngine.addingActivity(RecommendationEngine.recommendations(for: result.root, activity: false))
         return (result, recommendations, ScanSummary(root: result.root, recommendations: recommendations))
     }
 
