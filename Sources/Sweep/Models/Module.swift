@@ -61,6 +61,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .storage: "Explorer"
         case .developer: "Tools"
         case .updater: "Updates"
+        case .uninstaller: "Uninstaller"
         default: title
         }
     }
@@ -75,23 +76,16 @@ struct NavGroup: Identifiable, Equatable {
 
     static let all: [NavGroup] = [
         NavGroup(id: "overview", title: "Overview", symbol: Module.overview.symbol, modules: [.overview]),
-        NavGroup(id: "assistant", title: "Ask Sweep", symbol: Module.assistant.symbol, modules: [.assistant]),
+        NavGroup(id: "cleanup", title: "Cleanup", symbol: Module.cleanup.symbol, modules: [.cleanup, .trashBins, .history]),
         NavGroup(id: "storage", title: "Storage", symbol: Module.storage.symbol, modules: [.storage, .duplicates]),
         NavGroup(id: "developer", title: "Developer", symbol: Module.developer.symbol, modules: [.developer, .nodeModules, .docker]),
         NavGroup(id: "apps", title: "Applications", symbol: Module.uninstaller.symbol, modules: [.uninstaller, .updater]),
-        NavGroup(id: "cleanup", title: "Cleanup", symbol: Module.cleanup.symbol, modules: [.cleanup, .trashBins, .history]),
-        NavGroup(id: "smartScan", title: "Smart Scan", symbol: Module.smartScan.symbol, modules: [.smartScan]),
-        NavGroup(id: "protection", title: "Protection", symbol: Module.privacy.symbol, modules: [.privacy, .malware]),
-        NavGroup(id: "speed", title: "Speed", symbol: Module.optimization.symbol, modules: [.optimization, .maintenance]),
+        NavGroup(id: "health", title: "Mac Health", symbol: "heart.text.square", modules: [.smartScan, .privacy, .malware, .optimization, .maintenance]),
+        NavGroup(id: "assistant", title: "Ask Sweep", symbol: Module.assistant.symbol, modules: [.assistant]),
     ]
 
     static func group(_ id: String) -> NavGroup { all.first { $0.id == id }! }
 
-    /// Sidebar sections, in order. The first section has no heading.
-    static let sections: [(title: String?, groups: [NavGroup])] = [
-        (nil, [group("overview"), group("assistant")]),
-        ("Analyze", [group("storage"), group("developer"), group("apps")]),
-        ("Clean up", [group("cleanup")]),
-        ("Protect & speed up", [group("smartScan"), group("protection"), group("speed")]),
-    ]
+    /// The main sidebar list: one flat list with no section headings. Ask Sweep sits in the footer.
+    static let main: [NavGroup] = all.filter { $0.id != "assistant" }
 }

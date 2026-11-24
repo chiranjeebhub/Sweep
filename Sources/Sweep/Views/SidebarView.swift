@@ -22,26 +22,12 @@ struct SidebarView: View {
             .padding(.horizontal, 14)
             .padding(.bottom, 14)
 
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
-                    ForEach(NavGroup.sections.indices, id: \.self) { index in
-                        let section = NavGroup.sections[index]
-                        VStack(alignment: .leading, spacing: 1) {
-                            if let title = section.title {
-                                Text(title)
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Theme.faintText)
-                                    .padding(.horizontal, 8)
-                                    .padding(.bottom, 4)
-                            }
-                            ForEach(section.groups) { group in
-                                row(group)
-                            }
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(NavGroup.main) { group in
+                    row(group)
                 }
-                .padding(.horizontal, 8)
             }
+            .padding(.horizontal, 8)
 
             Spacer(minLength: 8)
             footer
@@ -76,7 +62,7 @@ struct SidebarView: View {
                 }
             }
             .padding(.horizontal, 8)
-            .frame(height: 28)
+            .frame(height: 30)
             .background(RoundedRectangle(cornerRadius: 6).fill(isActive ? Theme.rowSelected : Color.clear))
             .contentShape(Rectangle())
         }
@@ -89,24 +75,21 @@ struct SidebarView: View {
     }
 
     private var footer: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Rectangle().fill(Theme.divider).frame(height: 1).padding(.horizontal, -8)
+        VStack(alignment: .leading, spacing: 2) {
             Group {
                 if storage.isScanning {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Scanning…").font(.system(size: 12, weight: .medium))
+                        Text("Scanning…").font(.system(size: 11)).foregroundStyle(Theme.mutedText)
                         ProgressView().progressViewStyle(.linear).tint(Theme.accent).controlSize(.small)
                     }
                 } else if let result = storage.result {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Scanned \(RelativeDate.string(result.date).lowercased())").font(.system(size: 12)).foregroundStyle(Theme.mutedText)
-                        Text(result.rootURL.abbreviatedPath).font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.faintText)
-                    }
-                } else {
-                    Text("Not scanned yet").font(.system(size: 12)).foregroundStyle(Theme.mutedText)
+                    Text("Scanned \(RelativeDate.string(result.date).lowercased())")
+                        .font(.system(size: 11)).foregroundStyle(Theme.faintText)
                 }
             }
             .padding(.horizontal, 8)
+            .padding(.bottom, 6)
+            row(NavGroup.group("assistant"))
             SettingsButton {
                 HStack(spacing: 9) {
                     Image(systemName: "gearshape").font(.system(size: 13)).foregroundStyle(Theme.faintText).frame(width: 18)
@@ -114,7 +97,7 @@ struct SidebarView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 8)
-                .frame(height: 28)
+                .frame(height: 30)
                 .contentShape(Rectangle())
             }
         }
