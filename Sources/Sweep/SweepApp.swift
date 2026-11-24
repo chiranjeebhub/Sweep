@@ -179,25 +179,40 @@ struct TabStrip: View {
     let group: NavGroup
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(group.modules) { module in
-                let isActive = app.selection == module
-                Button { app.selection = module } label: {
-                    Text(module.tabTitle)
-                        .font(.system(size: 12, weight: isActive ? .semibold : .regular))
-                        .foregroundStyle(isActive ? Theme.text : Theme.mutedText)
+        HStack(spacing: 0) {
+            HStack(spacing: 2) {
+                ForEach(group.modules) { module in
+                    let isActive = app.selection == module
+                    Button { app.selection = module } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: module.symbol).font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(isActive ? group.tint : Theme.faintText)
+                            Text(module.tabTitle)
+                                .font(.system(size: 12, weight: isActive ? .semibold : .medium))
+                                .foregroundStyle(isActive ? Theme.text : Theme.mutedText)
+                        }
                         .padding(.horizontal, 12)
                         .frame(height: 26)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(isActive ? Theme.rowSelected : Color.clear))
+                        .background {
+                            if isActive {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Theme.track)
+                                    .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                            }
+                        }
                         .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isActive ? .isSelected : [])
                 }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isActive ? .isSelected : [])
             }
+            .padding(3)
+            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.white.opacity(0.06)))
             Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
-        .padding(.bottom, 4)
+        .padding(.horizontal, 28)
+        .padding(.top, 14)
+        .padding(.bottom, 0)
     }
 }

@@ -12,7 +12,7 @@ struct OverviewView: View {
                 RescanButton(storage: storage)
             }
             ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
+                VStack(alignment: .leading, spacing: 18) {
                     notices
                     diskSummary
                     if storage.result == nil {
@@ -25,16 +25,22 @@ struct OverviewView: View {
                         }
                     } else {
                         if storage.isScanning { ScanProgressLine(storage: storage) }
-                        Rectangle().fill(Theme.divider).frame(height: 1)
-                        HStack(alignment: .top, spacing: 44) {
-                            startHere.frame(maxWidth: .infinity, alignment: .topLeading).layoutPriority(1)
-                            whereSpaceGoes.frame(width: 340, alignment: .topLeading)
+                        HStack(alignment: .top, spacing: 18) {
+                            startHere
+                                .padding(20)
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
+                                .card(radius: 16)
+                                .layoutPriority(1)
+                            whereSpaceGoes
+                                .padding(20)
+                                .frame(width: 340, alignment: .topLeading)
+                                .card(radius: 16)
                         }
                     }
                 }
                 .frame(maxWidth: 1040, alignment: .leading)
                 .padding(.horizontal, 28)
-                .padding(.vertical, 22)
+                .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -65,35 +71,57 @@ struct OverviewView: View {
 
     @ViewBuilder private var diskSummary: some View {
         if let volume = storage.volume {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .bottom, spacing: 32) {
+            HStack(alignment: .center, spacing: 36) {
+                DiskRing(volume: volume, categories: storage.summary?.categories ?? [], notScanned: storage.notScanned)
+                    .frame(width: 168, height: 168)
+                VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(volume.name).font(.system(size: 12)).foregroundStyle(Theme.mutedText)
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(ByteFormat.string(volume.used)).font(.system(size: 30, weight: .semibold).monospacedDigit())
-                            Text("used of \(ByteFormat.string(volume.total))").font(.system(size: 15)).foregroundStyle(Theme.mutedText)
+                        Text(volume.name.uppercased())
+                            .font(.system(size: 11, weight: .semibold)).tracking(0.8)
+                            .foregroundStyle(Theme.faintText)
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(ByteFormat.string(volume.used))
+                                .font(.system(size: 34, weight: .bold).monospacedDigit()).tracking(-0.5)
+                            Text("of \(ByteFormat.string(volume.total)) used")
+                                .font(.system(size: 15)).foregroundStyle(Theme.mutedText)
                         }
                     }
-                    Spacer()
-                    statBlock("Available", ByteFormat.string(volume.available), color: Theme.text,
-                         help: "Free space on the disk. Purgeable space macOS can free on its own isn't counted.")
+                    HStack(spacing: 12) {
+                        statTile("Available", ByteFormat.string(volume.available), symbol: "internaldrive", tint: Theme.accent,
+                                 help: "Free space on the disk. Purgeable space macOS can free on its own isn't counted.")
+                        if storage.result != nil {
+                            statTile("Safe to remove", ByteFormat.string(storage.likelyRecoverable), symbol: "sparkles", tint: Theme.safe,
+                                     help: "The total of suggestions in the Likely safe tier. Each is still reviewed and confirmed by you.")
+                        }
+                    }
                     if storage.result != nil {
-                        statBlock("Likely safe to remove", ByteFormat.string(storage.likelyRecoverable), color: Theme.safe,
-                             help: "The total of suggestions in the Likely safe tier. Each is still reviewed and confirmed by you.")
-                        Button("Review cleanup") { app.selection = .cleanup }
-                            .buttonStyle(PillButtonStyle())
+                        Button {
+                            app.selection = .cleanup
+                        } label: {
+                            Label("Review cleanup", systemImage: "arrow.right").labelStyle(TrailingIconLabelStyle())
+                        }
+                        .buttonStyle(PillButtonStyle(height: 34))
                     }
                 }
-                StorageStrip(volume: volume, categories: storage.summary?.categories ?? [], notScanned: storage.notScanned)
+                Spacer(minLength: 0)
             }
+            .padding(26)
+            .card(radius: 16)
         }
     }
 
-    private func statBlock(_ title: String, _ value: String, color: Color, help: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 12)).foregroundStyle(Theme.mutedText)
-            Text(value).font(.system(size: 22, weight: .semibold).monospacedDigit()).foregroundStyle(color)
+    private func statTile(_ title: String, _ value: String, symbol: String, tint: Color, help: String) -> some View {
+        HStack(spacing: 12) {
+            IconTile(symbol: symbol, tint: tint, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.mutedText)
+                Text(value).font(.system(size: 19, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.text)
+            }
         }
+        .padding(.vertical, 12)
+        .padding(.leading, 12)
+        .padding(.trailing, 20)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface.opacity(0.6)))
         .help(help)
     }
 
@@ -168,7 +196,7 @@ struct OverviewView: View {
         let largest = max(categories.first?.size ?? 1, 1)
         return VStack(alignment: .leading, spacing: 4) {
             SectionTitle(title: "Where your space goes")
-                .padding(.bottom, 8)
+                .padding(.bottom, 10)
             ForEach(categories) { item in
                 HStack(spacing: 8) {
                     Circle().fill(item.category.color).frame(width: 8, height: 8)
@@ -180,5 +208,66 @@ struct OverviewView: View {
                 .padding(.vertical, 5)
             }
         }
+    }
+}
+
+/// Puts a label's icon after its title, as on "Review cleanup →".
+struct TrailingIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.title
+            configuration.icon.font(.system(size: 11, weight: .bold))
+        }
+    }
+}
+
+/// Disk usage as a ring: each scanned category in its colour, then the unscanned part, with free space left as track.
+struct DiskRing: View {
+    let volume: VolumeInfo
+    let categories: [ScanSummary.CategoryTotal]
+    let notScanned: Int64
+
+    private struct Segment: Identifiable {
+        let id: Int
+        let start: Double
+        let end: Double
+        let color: Color
+    }
+
+    private var segments: [Segment] {
+        let total = max(Double(volume.total), 1)
+        var parts: [(Double, Color)] = categories.map { (Double($0.size) / total, $0.category.color) }
+        if notScanned > 0 { parts.append((Double(notScanned) / total, Color(hex: 0x4A4B57))) }
+        var result: [Segment] = []
+        var cursor = 0.0
+        let gap = 0.004
+        for (index, part) in parts.enumerated() where part.0 > 0.002 {
+            let end = min(cursor + part.0, 1)
+            result.append(Segment(id: index, start: cursor, end: max(cursor, end - gap), color: part.1))
+            cursor = end
+        }
+        return result
+    }
+
+    private var usedFraction: Double { Double(volume.used) / max(Double(volume.total), 1) }
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.surface, lineWidth: 16)
+            ForEach(segments) { segment in
+                Circle()
+                    .trim(from: segment.start, to: segment.end)
+                    .stroke(segment.color, style: StrokeStyle(lineWidth: 16, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
+            VStack(spacing: 0) {
+                Text("\(Int((usedFraction * 100).rounded()))%")
+                    .font(.system(size: 30, weight: .bold).monospacedDigit()).tracking(-0.5)
+                Text("used").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.mutedText)
+            }
+        }
+        .padding(8)
+        .accessibilityElement()
+        .accessibilityLabel("Disk \(Int((usedFraction * 100).rounded())) percent used")
     }
 }

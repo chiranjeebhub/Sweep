@@ -74,6 +74,19 @@ struct NavGroup: Identifiable, Equatable {
     let symbol: String
     let modules: [Module]
 
+    /// Colour of the entry's icon tile, from the approved palette.
+    var tint: Color {
+        switch id {
+        case "overview": Color(hex: 0x8C9BFF)
+        case "cleanup": Theme.accent
+        case "storage": Color(hex: 0x4FC3E8)
+        case "developer": Theme.lavender
+        case "apps": Theme.protection
+        case "health": Theme.speed
+        default: Color(hex: 0xFF7EB6)
+        }
+    }
+
     static let all: [NavGroup] = [
         NavGroup(id: "overview", title: "Overview", symbol: Module.overview.symbol, modules: [.overview]),
         NavGroup(id: "cleanup", title: "Cleanup", symbol: Module.cleanup.symbol, modules: [.cleanup, .trashBins, .history]),

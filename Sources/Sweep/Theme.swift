@@ -66,12 +66,13 @@ struct PillButtonStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .font(.system(size: 13, weight: .semibold))
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .frame(height: height)
                 .foregroundStyle(foreground)
-                .background(RoundedRectangle(cornerRadius: 6).fill(fill))
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(fill))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.white.opacity(0.18), lineWidth: 0.5))
                 .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
-                .contentShape(RoundedRectangle(cornerRadius: 6))
+                .contentShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
@@ -95,10 +96,10 @@ struct OutlineButtonStyle: ButtonStyle {
                 .padding(.horizontal, 11)
                 .frame(height: height)
                 .foregroundStyle(Theme.secondaryText)
-                .background(RoundedRectangle(cornerRadius: 6).fill(configuration.isPressed ? Theme.surface : Color.clear))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color(hex: 0x3A3B47)))
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(configuration.isPressed ? Theme.track : Theme.surface))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
                 .opacity(isEnabled ? 1 : 0.4)
-                .contentShape(RoundedRectangle(cornerRadius: 6))
+                .contentShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
@@ -118,9 +119,16 @@ struct LinkButtonStyle: ButtonStyle {
 
 extension View {
     /// The bordered card used for panels and summaries.
-    func card(radius: CGFloat = 10) -> some View {
-        background(RoundedRectangle(cornerRadius: radius).fill(Theme.panel))
-            .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(Theme.border))
+    func card(radius: CGFloat = 12) -> some View {
+        background(
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(Theme.panel)
+                .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.06))
+        )
     }
 }
 
@@ -132,8 +140,8 @@ struct ScreenHeader<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 15, weight: .semibold))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.system(size: 20, weight: .bold)).tracking(-0.3)
                 if !subtitle.isEmpty {
                     Text(subtitle).font(.system(size: 12)).foregroundStyle(Theme.mutedText).lineLimit(1)
                 }
@@ -141,9 +149,9 @@ struct ScreenHeader<Trailing: View>: View {
             Spacer()
             trailing
         }
-        .padding(.horizontal, 24)
-        .frame(height: 56)
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.divider).frame(height: 1) }
+        .padding(.horizontal, 28)
+        .frame(height: 68)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.white.opacity(0.05)).frame(height: 1) }
     }
 }
 

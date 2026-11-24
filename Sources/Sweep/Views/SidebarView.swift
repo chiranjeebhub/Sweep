@@ -8,21 +8,21 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Room for the window's traffic-light buttons, measured from the window's top edge.
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 44)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 9) {
                 // The app icon from Resources/AppIcon.icns; its artwork has a transparent margin, hence the larger frame.
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable()
-                    .frame(width: 28, height: 28)
+                    .frame(width: 32, height: 32)
                     .padding(-2)
                     .accessibilityHidden(true)
-                Text("Sweep").font(.system(size: 14, weight: .semibold))
+                Text("Sweep").font(.system(size: 17, weight: .bold)).tracking(-0.3)
             }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 14)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 ForEach(NavGroup.main) { group in
                     row(group)
                 }
@@ -48,22 +48,31 @@ struct SidebarView: View {
         return Button {
             if !isActive { app.open(group) }
         } label: {
-            HStack(spacing: 9) {
-                Image(systemName: group.symbol)
-                    .font(.system(size: 13))
-                    .foregroundStyle(isActive ? Theme.accent : Theme.faintText)
-                    .frame(width: 18)
+            HStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(group.tint.opacity(isActive ? 0.24 : 0.14))
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        Image(systemName: group.symbol)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(group.tint)
+                    )
                 Text(group.title)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(isActive ? Theme.text : Theme.secondaryText)
                 Spacer()
                 if let count = count(for: group), count > 0 {
-                    Text("\(count)").font(.system(size: 12).monospacedDigit()).foregroundStyle(Theme.faintText)
+                    Text("\(count)")
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(isActive ? Theme.text : Theme.mutedText)
+                        .padding(.horizontal, 7)
+                        .frame(height: 18)
+                        .background(Capsule().fill(Theme.track))
                 }
             }
-            .padding(.horizontal, 8)
-            .frame(height: 30)
-            .background(RoundedRectangle(cornerRadius: 6).fill(isActive ? Theme.rowSelected : Color.clear))
+            .padding(.horizontal, 7)
+            .frame(height: 34)
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(isActive ? Theme.rowSelected : Color.clear))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -92,12 +101,15 @@ struct SidebarView: View {
             row(NavGroup.group("assistant"))
             SettingsButton {
                 HStack(spacing: 9) {
-                    Image(systemName: "gearshape").font(.system(size: 13)).foregroundStyle(Theme.faintText).frame(width: 18)
-                    Text("Settings").font(.system(size: 13)).foregroundStyle(Theme.secondaryText)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.white.opacity(0.08))
+                        .frame(width: 24, height: 24)
+                        .overlay(Image(systemName: "gearshape").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.mutedText))
+                    Text("Settings").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.secondaryText)
                     Spacer()
                 }
-                .padding(.horizontal, 8)
-                .frame(height: 30)
+                .padding(.horizontal, 7)
+                .frame(height: 34)
                 .contentShape(Rectangle())
             }
         }
